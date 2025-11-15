@@ -1,0 +1,112 @@
+// Users Service - Read only
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  query,
+  where,
+  orderBy,
+  limit
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { User } from '@/types';
+
+const COLLECTION_NAME = 'Users';
+
+export const usersService = {
+  // Read all users
+  async getAllUsers(): Promise<User[]> {
+    try {
+      const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.(),
+        updatedAt: doc.data().updatedAt?.toDate?.(),
+      })) as User[];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  },
+
+  // Read a single user by ID
+  async getUserById(id: string): Promise<User | null> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        return {
+          id: docSnap.id,
+          ...docSnap.data(),
+          createdAt: docSnap.data().createdAt?.toDate?.(),
+          updatedAt: docSnap.data().updatedAt?.toDate?.(),
+        } as User;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+  },
+
+  // Get total user count
+  async getTotalUserCount(): Promise<number> {
+    try {
+      const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+      return querySnapshot.size;
+    } catch (error) {
+      console.error('Error fetching user count:', error);
+      throw error;
+    }
+  },
+
+  // Get recent users
+  async getRecentUsers(limitCount: number = 10): Promise<User[]> {
+    try {
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+      const querySnapshot = await getDocs(q);
+
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.(),
+        updatedAt: doc.data().updatedAt?.toDate?.(),
+      })) as User[];
+    } catch (error) {
+      console.error('Error fetching recent users:', error);
+      throw error;
+    }
+  },
+
+  // Get users with referrals
+  async getUsersWithReferrals(): Promise<User[]> {
+    try {
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where('referralsCount', '>', 0),
+        orderBy('referralsCount', 'desc')
+      );
+      const querySnapshot = await getDocs(q);
+
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate?.(),
+        updatedAt: doc.data().updatedAt?.toDate?.(),
+      })) as User[];
+    } catch (error) {
+      console.error('Error fetching users with referrals:', error);
+      throw error;
+    }
+  },
+};
