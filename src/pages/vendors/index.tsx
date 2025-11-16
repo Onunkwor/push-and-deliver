@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,6 +39,7 @@ const formatAmount = (amount: number) => {
 }
 
 export default function VendorsPage() {
+  const navigate = useNavigate()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -113,6 +115,12 @@ export default function VendorsPage() {
       toast.error('Failed to unblock restaurant')
     } finally {
       setActionLoading(null)
+    }
+  }
+
+  const handleViewDetails = (restaurant: Restaurant) => {
+    if (restaurant.id) {
+      navigate(`/vendors/${restaurant.id}`)
     }
   }
 
@@ -253,7 +261,11 @@ export default function VendorsPage() {
                   </TableRow>
                 ) : (
                   filteredRestaurants.map((restaurant) => (
-                    <TableRow key={restaurant.id} className="hover:bg-muted/50">
+                    <TableRow
+                      key={restaurant.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => handleViewDetails(restaurant)}
+                    >
                       <TableCell className="font-medium">{restaurant.legalname|| 'N/A'}</TableCell>
                       <TableCell className="text-sm">{restaurant.email || 'N/A'}</TableCell>
                       <TableCell className="text-sm">{restaurant.phonenumber || 'N/A'}</TableCell>

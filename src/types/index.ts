@@ -1,44 +1,50 @@
 // src/types/index.ts - Updated to match Firebase schema
 import { Timestamp, GeoPoint } from 'firebase/firestore';
 
-// Enums
-export enum VehicleType {
-  car = "car",
-  bicycle = "bicycle",
-  bike = "bike"
-}
+// Type definitions (replacing enums for erasableSyntaxOnly compatibility)
+export const VehicleType = {
+  car: "car",
+  bicycle: "bicycle",
+  bike: "bike"
+} as const;
+export type VehicleType = typeof VehicleType[keyof typeof VehicleType];
 
-export enum VerificationStatus {
-  unverified = "unverified",
-  verified = "verified",
-  blocked = "blocked",
-  deleted = "deleted"
-}
+export const VerificationStatus = {
+  unverified: "unverified",
+  verified: "verified",
+  blocked: "blocked",
+  deleted: "deleted"
+} as const;
+export type VerificationStatus = typeof VerificationStatus[keyof typeof VerificationStatus];
 
-export enum WithdrawalStatus {
-  Successful = "Successful",
-  Pending = "Pending",
-  Failed = "Failed",
-  Reversed = "Reversed"
-}
+export const WithdrawalStatus = {
+  Successful: "Successful",
+  Pending: "Pending",
+  Failed: "Failed",
+  Reversed: "Reversed"
+} as const;
+export type WithdrawalStatus = typeof WithdrawalStatus[keyof typeof WithdrawalStatus];
 
-export enum TransactionStatus {
-  Successful = "Successful",
-  Pending = "Pending",
-  Failed = "Failed"
-}
+export const TransactionStatus = {
+  Successful: "Successful",
+  Pending: "Pending",
+  Failed: "Failed"
+} as const;
+export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
 
-export enum TransactionType {
-  Credit = "Credit",
-  Debit = "Debit"
-}
+export const TransactionType = {
+  Credit: "Credit",
+  Debit: "Debit"
+} as const;
+export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
 
-export enum FeeType {
-  fooddeliveryfee = 0,
-  servicefee = 1,
-  ridehauling = 2,
-  freightbooking = 3
-}
+export const FeeType = {
+  fooddeliveryfee: 0,
+  servicefee: 1,
+  ridehauling: 2,
+  freightbooking: 3
+} as const;
+export type FeeType = typeof FeeType[keyof typeof FeeType];
 
 // Interfaces
 export interface Rider {
@@ -158,18 +164,18 @@ export interface Referral {
 }
 
 export interface Fee {
-  id?: string;
-  addedSurge?: number;
-  bookingFee?: number;
-  feeType?: FeeType;
-  minFare?: number;
-  name?: string;
-  perKm?: number;
-  perWeight?: number;
-  surgeMultiplier?: number;
-  value?: number;
+  id: string
+  feeType?: FeeType
+  name?: string
+  bookingFee?: number
+  perKm?: number
+  perMin?: number
+  perWeight?: number
+  minFare?: number
+  surgeMultiplier?: number
+  addedSurge?: number
+  value?: number
 }
-
 // Legacy types (kept for compatibility, will be removed)
 export interface Vendor extends Restaurant {}
 export interface Notification {

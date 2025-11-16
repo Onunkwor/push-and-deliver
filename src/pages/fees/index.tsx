@@ -45,8 +45,12 @@ export default function FeesPage() {
   const [editValues, setEditValues] = useState({
     bookingFee: '',
     perKm: '',
+    perMin: '',
+    perWeight: '',
     minFare: '',
     surgeMultiplier: '',
+    addedSurge: '',
+    value: '',
   })
 
   useEffect(() => {
@@ -71,8 +75,12 @@ export default function FeesPage() {
     setEditValues({
       bookingFee: (fee.bookingFee || 0).toString(),
       perKm: (fee.perKm || 0).toString(),
+      perMin: (fee.perMin || 0).toString(),
+      perWeight: (fee.perWeight || 0).toString(),
       minFare: (fee.minFare || 0).toString(),
       surgeMultiplier: (fee.surgeMultiplier || 0).toString(),
+      addedSurge: (fee.addedSurge || 0).toString(),
+      value: (fee.value || 0).toString(),
     })
   }
 
@@ -83,8 +91,12 @@ export default function FeesPage() {
       const updates = {
         bookingFee: parseFloat(editValues.bookingFee) || 0,
         perKm: parseFloat(editValues.perKm) || 0,
+        perMin: parseFloat(editValues.perMin) || 0,
+        perWeight: parseFloat(editValues.perWeight) || 0,
         minFare: parseFloat(editValues.minFare) || 0,
         surgeMultiplier: parseFloat(editValues.surgeMultiplier) || 0,
+        addedSurge: parseFloat(editValues.addedSurge) || 0,
+        value: parseFloat(editValues.value) || 0,
       }
 
       await feesService.updateFee(editingFee.id, updates)
@@ -187,15 +199,19 @@ export default function FeesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Booking Fee</TableHead>
                   <TableHead>Per Km</TableHead>
+                  <TableHead>Per Min</TableHead>
+                  <TableHead>Per Weight</TableHead>
                   <TableHead>Min Fare</TableHead>
-                  <TableHead>Surge Multiplier</TableHead>
+                  <TableHead>Surge Mult.</TableHead>
+                  <TableHead>Added Surge</TableHead>
+                  <TableHead>Value</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {fees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       No fees found
                     </TableCell>
                   </TableRow>
@@ -211,10 +227,22 @@ export default function FeesPage() {
                         ₦{formatAmount(fee.perKm || 0)}
                       </TableCell>
                       <TableCell className="font-medium">
+                        ₦{formatAmount(fee.perMin || 0)}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        ₦{formatAmount(fee.perWeight || 0)}
+                      </TableCell>
+                      <TableCell className="font-medium">
                         ₦{formatAmount(fee.minFare || 0)}
                       </TableCell>
                       <TableCell className="text-sm">
                         {fee.surgeMultiplier || 0}x
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        ₦{formatAmount(fee.addedSurge || 0)}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        ₦{formatAmount(fee.value || 0)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Dialog open={editingFee?.id === fee.id} onOpenChange={(open) => !open && setEditingFee(null)}>
@@ -234,58 +262,112 @@ export default function FeesPage() {
                                 Update fee values for this fee type
                               </DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label htmlFor="bookingFee">Booking Fee (₦)</Label>
-                                <Input
-                                  id="bookingFee"
-                                  type="number"
-                                  value={editValues.bookingFee}
-                                  onChange={(e) => setEditValues({ ...editValues, bookingFee: e.target.value })}
-                                  placeholder="Enter booking fee"
-                                  step="0.01"
-                                  min="0"
-                                  className="mt-2"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="perKm">Per Km Rate (₦)</Label>
-                                <Input
-                                  id="perKm"
-                                  type="number"
-                                  value={editValues.perKm}
-                                  onChange={(e) => setEditValues({ ...editValues, perKm: e.target.value })}
-                                  placeholder="Enter per km rate"
-                                  step="0.01"
-                                  min="0"
-                                  className="mt-2"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="minFare">Minimum Fare (₦)</Label>
-                                <Input
-                                  id="minFare"
-                                  type="number"
-                                  value={editValues.minFare}
-                                  onChange={(e) => setEditValues({ ...editValues, minFare: e.target.value })}
-                                  placeholder="Enter minimum fare"
-                                  step="0.01"
-                                  min="0"
-                                  className="mt-2"
-                                />
-                              </div>
-                              <div>
-                                <Label htmlFor="surgeMultiplier">Surge Multiplier</Label>
-                                <Input
-                                  id="surgeMultiplier"
-                                  type="number"
-                                  value={editValues.surgeMultiplier}
-                                  onChange={(e) => setEditValues({ ...editValues, surgeMultiplier: e.target.value })}
-                                  placeholder="Enter surge multiplier"
-                                  step="0.1"
-                                  min="1"
-                                  className="mt-2"
-                                />
+                            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label htmlFor="bookingFee">Booking Fee (₦)</Label>
+                                  <Input
+                                    id="bookingFee"
+                                    type="number"
+                                    value={editValues.bookingFee}
+                                    onChange={(e) => setEditValues({ ...editValues, bookingFee: e.target.value })}
+                                    placeholder="Enter booking fee"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="perKm">Per Km Rate (₦)</Label>
+                                  <Input
+                                    id="perKm"
+                                    type="number"
+                                    value={editValues.perKm}
+                                    onChange={(e) => setEditValues({ ...editValues, perKm: e.target.value })}
+                                    placeholder="Enter per km rate"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="perMin">Per Minute Rate (₦)</Label>
+                                  <Input
+                                    id="perMin"
+                                    type="number"
+                                    value={editValues.perMin}
+                                    onChange={(e) => setEditValues({ ...editValues, perMin: e.target.value })}
+                                    placeholder="Enter per minute rate"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="perWeight">Per Weight Rate (₦)</Label>
+                                  <Input
+                                    id="perWeight"
+                                    type="number"
+                                    value={editValues.perWeight}
+                                    onChange={(e) => setEditValues({ ...editValues, perWeight: e.target.value })}
+                                    placeholder="Enter per weight rate"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="minFare">Minimum Fare (₦)</Label>
+                                  <Input
+                                    id="minFare"
+                                    type="number"
+                                    value={editValues.minFare}
+                                    onChange={(e) => setEditValues({ ...editValues, minFare: e.target.value })}
+                                    placeholder="Enter minimum fare"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="surgeMultiplier">Surge Multiplier</Label>
+                                  <Input
+                                    id="surgeMultiplier"
+                                    type="number"
+                                    value={editValues.surgeMultiplier}
+                                    onChange={(e) => setEditValues({ ...editValues, surgeMultiplier: e.target.value })}
+                                    placeholder="Enter surge multiplier"
+                                    step="0.1"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="addedSurge">Added Surge (₦)</Label>
+                                  <Input
+                                    id="addedSurge"
+                                    type="number"
+                                    value={editValues.addedSurge}
+                                    onChange={(e) => setEditValues({ ...editValues, addedSurge: e.target.value })}
+                                    placeholder="Enter added surge"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="value">Value (₦)</Label>
+                                  <Input
+                                    id="value"
+                                    type="number"
+                                    value={editValues.value}
+                                    onChange={(e) => setEditValues({ ...editValues, value: e.target.value })}
+                                    placeholder="Enter value"
+                                    step="0.01"
+                                    min="0"
+                                    className="mt-2"
+                                  />
+                                </div>
                               </div>
                               <Button
                                 onClick={handleUpdateFee}

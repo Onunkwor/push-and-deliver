@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,13 +14,21 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Search } from 'lucide-react'
+import { MoreHorizontal, Search, Eye } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -37,7 +46,34 @@ const formatAmount = (amount: number) => {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+const getStatusLabel = (status: string | undefined) => {
+  switch (status) {
+    case VerificationStatus.verified:
+      return 'Verified'
+    case VerificationStatus.unverified:
+      return 'Unverified'
+    case VerificationStatus.blocked:
+      return 'Blocked'
+    case VerificationStatus.deleted:
+      return 'Deleted'
+    default:
+      return 'Unverified'
+  }
+}
+
+const getStatusBadgeVariant = (status: string | undefined) => {
+  switch (status) {
+    case VerificationStatus.verified:
+      return 'default' as const
+    case VerificationStatus.blocked:
+      return 'destructive' as const
+    default:
+      return 'secondary' as const
+  }
+}
+
 export default function RidersPage() {
+  const navigate = useNavigate()
   const [riders, setRiders] = useState<Rider[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -116,10 +152,41 @@ export default function RidersPage() {
     }
   }
 
+  const handleStatusChange = async (riderId: string, newStatus: VerificationStatus) => {
+    try {
+      setActionLoading(riderId)
+
+      if (newStatus === VerificationStatus.verified) {
+        await ridersService.verifyRider(riderId)
+        toast.success('Rider verified successfully')
+      } else if (newStatus === VerificationStatus.blocked) {
+        await ridersService.blockRider(riderId)
+        toast.success('Rider blocked successfully')
+      } else if (newStatus === VerificationStatus.unverified) {
+        await ridersService.unblockRider(riderId)
+        toast.success('Rider status updated successfully')
+      }
+
+      await loadRiders()
+     
+    } catch (error) {
+      console.error('Error updating rider status:', error)
+      toast.error('Failed to update rider status')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleViewDetails = (rider: Rider) => {
+    if (rider.id) {
+      navigate(`/riders/${rider.id}`)
+    }
+  }
+
   const totalRiders = riders.length
   const verifiedRiders = riders.filter((r) => r.verificationStatus === VerificationStatus.verified).length
   const blockedRiders = riders.filter((r) => r.verificationStatus === VerificationStatus.blocked).length
-  const totalWalletBalance = riders.reduce((sum, r) => sum + (r.walletbalance || 0), 0)
+  const pendingRiders = riders.filter((r) => r.verificationStatus === VerificationStatus.unverified).length
 
   if (loading) {
     return (
@@ -153,47 +220,49 @@ export default function RidersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-l-4 border-l-[hsl(220,40%,45%)] bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Riders
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRiders}</div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(220, 40%, 45%)' }}>{totalRiders}</div>
+            <p className="text-xs text-muted-foreground mt-1">All registered riders</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(150,35%,42%)] bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Verified
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{verifiedRiders}</div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(150, 35%, 42%)' }}>{verifiedRiders}</div>
+            <p className="text-xs text-muted-foreground mt-1">Active verified riders</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(30,50%,48%)] bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-background">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pending
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(30, 50%, 48%)' }}>{pendingRiders}</div>
+            <p className="text-xs text-muted-foreground mt-1">Awaiting verification</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-[hsl(350,50%,48%)] bg-gradient-to-br from-red-50 to-white dark:from-red-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Blocked
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{blockedRiders}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Wallet Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ₦{formatAmount(totalWalletBalance)}
-            </div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(350, 50%, 48%)' }}>{blockedRiders}</div>
+            <p className="text-xs text-muted-foreground mt-1">Blocked riders</p>
           </CardContent>
         </Card>
       </div>
@@ -240,20 +309,19 @@ export default function RidersPage() {
                   <TableHead>Vehicle</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Online</TableHead>
-                  <TableHead>Wallet Balance</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRiders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       No riders found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredRiders.map((rider) => (
-                    <TableRow key={rider.id} className="hover:bg-muted/50">
+                    <TableRow key={rider.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => handleViewDetails(rider)}>
                       <TableCell className="font-medium">{rider.fullname || 'N/A'}</TableCell>
                       <TableCell className="text-sm">{rider.email || 'N/A'}</TableCell>
                       <TableCell className="text-sm">{rider.phonenumber || 'N/A'}</TableCell>
@@ -263,16 +331,8 @@ export default function RidersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            rider.verificationStatus === VerificationStatus.verified
-                              ? 'default'
-                              : rider.verificationStatus === VerificationStatus.blocked
-                              ? 'destructive'
-                              : 'secondary'
-                          }
-                        >
-                          {rider.verificationStatus || 'unverified'}
+                        <Badge variant={getStatusBadgeVariant(rider.verificationStatus)}>
+                          {getStatusLabel(rider.verificationStatus)}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -280,34 +340,14 @@ export default function RidersPage() {
                           {rider.onlineStatus ? 'Online' : 'Offline'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">
-                        ₦{formatAmount(rider.walletbalance || 0)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={actionLoading === rider.id}>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {rider.verificationStatus !== VerificationStatus.verified && (
-                              <DropdownMenuItem onClick={() => handleVerify(rider.id!)}>
-                                Verify Rider
-                              </DropdownMenuItem>
-                            )}
-                            {rider.verificationStatus === VerificationStatus.blocked ? (
-                              <DropdownMenuItem onClick={() => handleUnblock(rider.id!)}>
-                                Unblock
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem onClick={() => handleBlock(rider.id!)}>
-                                Block Rider
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewDetails(rider)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

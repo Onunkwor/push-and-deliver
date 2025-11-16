@@ -4,8 +4,11 @@ import { SignIn, SignedIn, SignedOut } from '@clerk/clerk-react'
 import { Layout } from '@/components/layout'
 import DashboardPage from '@/pages/dashboard'
 import UsersPage from '@/pages/users'
+import UserDetailsPage from '@/pages/users/details'
 import RidersPage from '@/pages/riders'
+import RiderDetailsPage from '@/pages/riders/details'
 import VendorsPage from '@/pages/vendors'
+import VendorDetailsPage from '@/pages/vendors/details'
 import FeesPage from '@/pages/fees'
 import ReferralsPage from '@/pages/referrals'
 import WithdrawalsPage from '@/pages/withdrawals'
@@ -29,8 +32,11 @@ function Router() {
                 <Routes>
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users/:id" element={<UserDetailsPage />} />
                   <Route path="/riders" element={<RidersPage />} />
+                  <Route path="/riders/:id" element={<RiderDetailsPage />} />
                   <Route path="/vendors" element={<VendorsPage />} />
+                  <Route path="/vendors/:id" element={<VendorDetailsPage />} />
                   <Route path="/fees" element={<FeesPage />} />
                   <Route path="/referrals" element={<ReferralsPage />} />
                   <Route path="/withdrawals" element={<WithdrawalsPage />} />

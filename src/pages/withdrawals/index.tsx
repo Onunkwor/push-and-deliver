@@ -32,10 +32,75 @@ import type { Withdrawal } from '@/types'
 import { WithdrawalStatus } from '@/types'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getStatusLabel, getStatusBadgeVariant, isStatusEqual } from '@/lib/status-utils'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
 
 const formatAmount = (amount: number) => {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+
+// User type helper - specific to withdrawals
+const getUserTypeLabel = (userType: any) => {
+  const typeNum = typeof userType === 'string' ? parseInt(userType) : userType
+  if (typeNum === 0) return 'Vendor'
+  if (typeNum === 1) return 'Rider'
+  if (userType === 'Vendor' || userType?.toLowerCase() === 'vendor') return 'Vendor'
+  if (userType === 'Rider' || userType?.toLowerCase() === 'rider') return 'Rider'
+  return 'Unknown'
+}
+
+const isUserTypeEqual = (userType: any, targetValue: number) => {
+  const typeNum = typeof userType === 'string' ? parseInt(userType) : userType
+  return typeNum === targetValue || userType === targetValue.toString()
+}
+
+// Professional chart configurations
+const statusChartConfig = {
+  successful: {
+    label: 'Successful',
+    color: 'hsl(150, 35%, 42%)', // forest green
+  },
+  pending: {
+    label: 'Pending',
+    color: 'hsl(30, 50%, 48%)', // amber
+  },
+  failed: {
+    label: 'Failed',
+    color: 'hsl(350, 50%, 48%)', // burgundy
+  },
+  reversed: {
+    label: 'Reversed',
+    color: 'hsl(220, 40%, 45%)', // navy
+  },
+} satisfies ChartConfig
+
+const userTypeChartConfig = {
+  vendor: {
+    label: 'Vendor',
+    color: 'hsl(270, 35%, 45%)', // deep purple
+  },
+  rider: {
+    label: 'Rider',
+    color: 'hsl(185, 40%, 45%)', // teal
+  },
+} satisfies ChartConfig
 
 export default function WithdrawalsPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
@@ -69,7 +134,9 @@ export default function WithdrawalsPage() {
 
     const matchesStatus =
       statusFilter === 'all' ||
-      w.status === statusFilter
+      w.status === statusFilter ||
+      w.status?.toString() === statusFilter ||
+      getStatusLabel(w.status) === statusFilter
 
     return matchesSearch && matchesStatus
   })
@@ -89,9 +156,38 @@ export default function WithdrawalsPage() {
   }
 
   const totalWithdrawals = withdrawals.length
-  const pendingWithdrawals = withdrawals.filter((w) => w.status === WithdrawalStatus.Pending).length
-  const successfulWithdrawals = withdrawals.filter((w) => w.status === WithdrawalStatus.Successful).length
+  const pendingWithdrawals = withdrawals.filter((w) => isStatusEqual(w.status, 1)).length
+  const successfulWithdrawals = withdrawals.filter((w) => isStatusEqual(w.status, 0)).length
+  const failedWithdrawals = withdrawals.filter((w) => isStatusEqual(w.status, 2)).length
+  const reversedWithdrawals = withdrawals.filter((w) => isStatusEqual(w.status, 3)).length
   const totalAmount = withdrawals.reduce((sum, w) => sum + (w.amount || 0), 0)
+  const pendingAmount = withdrawals
+    .filter((w) => isStatusEqual(w.status, 1))
+    .reduce((sum, w) => sum + (w.amount || 0), 0)
+  const successfulAmount = withdrawals
+    .filter((w) => isStatusEqual(w.status, 0))
+    .reduce((sum, w) => sum + (w.amount || 0), 0)
+
+  // Prepare chart data
+  const statusData = [
+    { status: 'Successful', successful: successfulWithdrawals, fill: 'var(--color-successful)' },
+    { status: 'Pending', pending: pendingWithdrawals, fill: 'var(--color-pending)' },
+    { status: 'Failed', failed: failedWithdrawals, fill: 'var(--color-failed)' },
+    { status: 'Reversed', reversed: reversedWithdrawals, fill: 'var(--color-reversed)' },
+  ]
+
+  const userTypeData = [
+    {
+      type: 'vendor',
+      value: withdrawals.filter((w) => isUserTypeEqual(w.userType, 0)).length,
+      fill: 'var(--color-vendor)'
+    },
+    {
+      type: 'rider',
+      value: withdrawals.filter((w) => isUserTypeEqual(w.userType, 1)).length,
+      fill: 'var(--color-rider)'
+    },
+  ]
 
   if (loading) {
     return (
@@ -125,47 +221,121 @@ export default function WithdrawalsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-l-4 border-l-[hsl(220,40%,45%)] bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Withdrawals
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalWithdrawals}</div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(220, 40%, 45%)' }}>{totalWithdrawals}</div>
+            <p className="text-xs text-muted-foreground mt-1">All requests</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(30,50%,48%)] bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Pending
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingWithdrawals}</div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(30, 50%, 48%)' }}>{pendingWithdrawals}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              ₦{formatAmount(pendingAmount)} pending
+            </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(150,35%,42%)] bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Successful
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{successfulWithdrawals}</div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(150, 35%, 42%)' }}>{successfulWithdrawals}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              ₦{formatAmount(successfulAmount)} paid out
+            </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(185,40%,45%)] bg-gradient-to-br from-cyan-50 to-white dark:from-cyan-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Amount
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold" style={{ color: 'hsl(185, 40%, 45%)' }}>
               ₦{formatAmount(totalAmount)}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Combined value</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Withdrawal Status Distribution</CardTitle>
+            <p className="text-sm text-muted-foreground">Breakdown by status</p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ChartContainer config={statusChartConfig}>
+              <BarChart data={statusData} width={500} height={300}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="status" tickLine={false} tickMargin={10} axisLine={false} />
+                <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar dataKey="successful" fill="var(--color-successful)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="pending" fill="var(--color-pending)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="failed" fill="var(--color-failed)" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="reversed" fill="var(--color-reversed)" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Withdrawals by User Type</CardTitle>
+            <p className="text-sm text-muted-foreground">Vendor vs Rider requests</p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ChartContainer config={userTypeChartConfig}>
+              <PieChart width={500} height={300}>
+                <Pie
+                  data={userTypeData.filter(item => item.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ payload, ...props }) => {
+                    const config = userTypeChartConfig[payload.type as keyof typeof userTypeChartConfig]
+                    return (
+                      <text
+                        cx={props.cx}
+                        cy={props.cy}
+                        x={props.x}
+                        y={props.y}
+                        textAnchor={props.textAnchor}
+                        dominantBaseline={props.dominantBaseline}
+                        className="fill-foreground text-sm font-medium"
+                      >
+                        {`${config?.label}: ${payload.value}`}
+                      </text>
+                    )
+                  }}
+                  outerRadius={100}
+                  dataKey="value"
+                >
+                  {userTypeData.filter(item => item.value > 0).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              </PieChart>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
@@ -194,10 +364,10 @@ export default function WithdrawalsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value={WithdrawalStatus.Pending}>Pending</SelectItem>
-                <SelectItem value={WithdrawalStatus.Successful}>Successful</SelectItem>
-                <SelectItem value={WithdrawalStatus.Failed}>Failed</SelectItem>
-                <SelectItem value={WithdrawalStatus.Reversed}>Reversed</SelectItem>
+                <SelectItem value="1">Pending</SelectItem>
+                <SelectItem value="0">Successful</SelectItem>
+                <SelectItem value="2">Failed</SelectItem>
+                <SelectItem value="3">Reversed</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -233,21 +403,23 @@ export default function WithdrawalsPage() {
                         ₦{formatAmount(withdrawal.amount || 0)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{withdrawal.userType || 'N/A'}</Badge>
+                        <Badge
+                          variant="outline"
+                          style={{
+                            borderColor: isUserTypeEqual(withdrawal.userType, 0)
+                              ? 'hsl(270, 35%, 45%)'
+                              : 'hsl(185, 40%, 45%)',
+                            color: isUserTypeEqual(withdrawal.userType, 0)
+                              ? 'hsl(270, 35%, 45%)'
+                              : 'hsl(185, 40%, 45%)'
+                          }}
+                        >
+                          {getUserTypeLabel(withdrawal.userType)}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            withdrawal.status === WithdrawalStatus.Successful
-                              ? 'default'
-                              : withdrawal.status === WithdrawalStatus.Failed
-                              ? 'destructive'
-                              : withdrawal.status === WithdrawalStatus.Reversed
-                              ? 'secondary'
-                              : 'outline'
-                          }
-                        >
-                          {withdrawal.status || 'Pending'}
+                        <Badge variant={getStatusBadgeVariant(withdrawal.status)}>
+                          {getStatusLabel(withdrawal.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -258,7 +430,7 @@ export default function WithdrawalsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {withdrawal.status === WithdrawalStatus.Pending && (
+                            {isStatusEqual(withdrawal.status, 1) && (
                               <>
                                 <DropdownMenuItem
                                   onClick={() => handleUpdateStatus(withdrawal.id!, WithdrawalStatus.Successful)}
@@ -272,7 +444,7 @@ export default function WithdrawalsPage() {
                                 </DropdownMenuItem>
                               </>
                             )}
-                            {withdrawal.status === WithdrawalStatus.Successful && (
+                            {isStatusEqual(withdrawal.status, 0) && (
                               <DropdownMenuItem
                                 onClick={() => handleUpdateStatus(withdrawal.id!, WithdrawalStatus.Reversed)}
                               >

@@ -28,12 +28,12 @@ export const feesService = {
         updatedAt: Timestamp.fromDate(now),
       });
 
-      const newFee: Fee = {
+      const newFee = {
         id: docRef.id,
         ...feeData,
         createdAt: now,
         updatedAt: now,
-      };
+      } as Fee;
 
       return newFee;
     } catch (error) {
@@ -45,14 +45,13 @@ export const feesService = {
   // Read all fees
   async getAllFees(): Promise<Fee[]> {
     try {
-      const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
 
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
+        createdAt: doc.data().createdAt?.toDate?.(),
+        updatedAt: doc.data().updatedAt?.toDate?.(),
       })) as Fee[];
     } catch (error) {
       console.error('Error fetching fees:', error);

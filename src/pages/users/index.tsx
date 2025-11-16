@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -12,18 +13,73 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Search } from 'lucide-react'
+import { Search, TrendingUp } from 'lucide-react'
 import { usersService } from '@/services/users.service'
 import { referralsService } from '@/services/referrals.service'
 import type { User } from '@/types'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
 
 const formatAmount = (amount: number) => {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// Professional chart configurations
+const walletChartConfig = {
+  high: {
+    label: 'High (>₦10,000)',
+    color: 'hsl(150, 35%, 42%)', // forest green
+  },
+  medium: {
+    label: 'Medium (₦1,000-10,000)',
+    color: 'hsl(30, 50%, 48%)', // amber
+  },
+  low: {
+    label: 'Low (<₦1,000)',
+    color: 'hsl(350, 50%, 48%)', // burgundy
+  },
+} satisfies ChartConfig
+
+const referralChartConfig = {
+  users: {
+    label: 'Users',
+    color: 'hsl(220, 40%, 45%)', // navy blue
+  },
+  referrals: {
+    label: 'Referrals',
+    color: 'hsl(270, 35%, 45%)', // deep purple
+  },
+} satisfies ChartConfig
+
+const balanceDistributionConfig = {
+  balance: {
+    label: 'Wallet Balance (₦)',
+    color: 'hsl(185, 40%, 45%)', // teal
+  },
+} satisfies ChartConfig
+
 export default function UsersPage() {
+  const navigate = useNavigate()
   const [users, setUsers] = useState<User[]>([])
   const [referralCounts, setReferralCounts] = useState<Map<string, number>>(new Map())
   const [loading, setLoading] = useState(true)
@@ -59,6 +115,12 @@ export default function UsersPage() {
     }
   }
 
+  const handleUserClick = (user: User) => {
+    if (user.id) {
+      navigate(`/users/${user.id}`)
+    }
+  }
+
   const filteredUsers = users.filter(
     (u) =>
       u.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,9 +129,82 @@ export default function UsersPage() {
   )
 
   const totalUsers = users.length
-  const totalWalletBalance = users.reduce((sum, u) => sum + (u.walletbalance || 0), 0)
   const totalReferrals = Array.from(referralCounts.values()).reduce((sum, count) => sum + count, 0)
-  const avgWalletBalance = totalUsers > 0 ? totalWalletBalance / totalUsers : 0
+
+  // Calculate user growth statistics
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  const weekAgo = new Date(today)
+  weekAgo.setDate(weekAgo.getDate() - 7)
+
+  const newUsersToday = users.filter(u => {
+    if (!u.createdAt) return false
+    const userDate = u.createdAt instanceof Date ? u.createdAt : u.createdAt.toDate()
+    return userDate >= today
+  }).length
+
+  const newUsersThisWeek = users.filter(u => {
+    if (!u.createdAt) return false
+    const userDate = u.createdAt instanceof Date ? u.createdAt : u.createdAt.toDate()
+    return userDate >= weekAgo
+  }).length
+
+  const newUsersLastWeek = users.filter(u => {
+    if (!u.createdAt) return false
+    const userDate = u.createdAt instanceof Date ? u.createdAt : u.createdAt.toDate()
+    const twoWeeksAgo = new Date(weekAgo)
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 7)
+    return userDate >= twoWeeksAgo && userDate < weekAgo
+  }).length
+
+  const growthRate = newUsersLastWeek > 0
+    ? (((newUsersThisWeek - newUsersLastWeek) / newUsersLastWeek) * 100).toFixed(1)
+    : '0.0'
+ 
+  // Prepare chart data
+  const walletDistributionData = [
+    {
+      category: 'High',
+      high: users.filter(u => (u.walletbalance || 0) > 10000).length,
+      fill: 'var(--color-high)'
+    },
+    {
+      category: 'Medium',
+      medium: users.filter(u => (u.walletbalance || 0) >= 1000 && (u.walletbalance || 0) <= 10000).length,
+      fill: 'var(--color-medium)'
+    },
+    {
+      category: 'Low',
+      low: users.filter(u => (u.walletbalance || 0) < 1000).length,
+      fill: 'var(--color-low)'
+    },
+  ]
+
+  const topUsersByBalance = users
+    .sort((a, b) => (b.walletbalance || 0) - (a.walletbalance || 0))
+    .slice(0, 10)
+    .map(u => ({
+      name: u.username || u.email?.split('@')[0] || 'Unknown',
+      balance: u.walletbalance || 0,
+      fill: 'var(--color-balance)'
+    }))
+
+  const topUsersByReferrals = Array.from(referralCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([uid, count]) => {
+      const user = users.find(u => u.id === uid)
+      return {
+        name: user?.username || user?.email?.split('@')[0] || 'Unknown',
+        users: count,
+        referrals: count,
+        fill: 'var(--color-referrals)'
+      }
+    })
 
   if (loading) {
     return (
@@ -104,51 +239,171 @@ export default function UsersPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(220,40%,45%)] bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Users
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
+            <div className="text-3xl font-bold" style={{ color: 'hsl(220, 40%, 45%)' }}>{totalUsers}</div>
+            <p className="text-xs text-muted-foreground mt-1">Registered users</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(150,35%,42%)] bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Wallet Balance
+              New Today
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ₦{formatAmount(totalWalletBalance)}
+            <div className="text-3xl font-bold" style={{ color: 'hsl(150, 35%, 42%)' }}>
+              {newUsersToday}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Users joined today</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(185,40%,45%)] bg-gradient-to-br from-cyan-50 to-white dark:from-cyan-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Avg Wallet Balance
+              New This Week
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ₦{formatAmount(avgWalletBalance)}
+            <div className="text-3xl font-bold" style={{ color: 'hsl(185, 40%, 45%)' }}>
+              {newUsersThisWeek}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-l-4 border-l-[hsl(270,35%,45%)] bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/20 dark:to-background">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Referrals
+              Growth Rate
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalReferrals}</div>
+            <div className="text-3xl font-bold flex items-center gap-2" style={{ color: 'hsl(270, 35%, 45%)' }}>
+              {growthRate}%
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Week over week</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Wallet Balance Distribution</CardTitle>
+            <p className="text-sm text-muted-foreground">Users grouped by wallet balance</p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ChartContainer config={walletChartConfig}>
+              <PieChart width={500} height={300}>
+                <Pie
+                  data={walletDistributionData.filter(item => ((item.high || 0) || (item.medium || 0) || (item.low || 0)) > 0)}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ payload, ...props }) => {
+                    const value = payload.high || payload.medium || payload.low
+                    return (
+                      <text
+                        cx={props.cx}
+                        cy={props.cy}
+                        x={props.x}
+                        y={props.y}
+                        textAnchor={props.textAnchor}
+                        dominantBaseline={props.dominantBaseline}
+                        className="fill-foreground text-xs font-medium"
+                      >
+                        {`${payload.category}: ${value}`}
+                      </text>
+                    )
+                  }}
+                  outerRadius={100}
+                  dataKey={(data) => data.high || data.medium || data.low}
+                >
+                  {walletDistributionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Top 10 Users by Balance</CardTitle>
+            <p className="text-sm text-muted-foreground">Highest wallet balances</p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ChartContainer config={balanceDistributionConfig}>
+              <AreaChart data={topUsersByBalance} width={500} height={300}>
+                <defs>
+                  <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-balance)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="var(--color-balance)" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area type="monotone" dataKey="balance" stroke="var(--color-balance)" fill="url(#colorBalance)" />
+              </AreaChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Referrers Chart */}
+      {topUsersByReferrals.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Top 10 Users by Referrals</CardTitle>
+            <p className="text-sm text-muted-foreground">Most active referrers</p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ChartContainer config={referralChartConfig}>
+              <LineChart data={topUsersByReferrals} width={500} height={300}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line
+                  type="monotone"
+                  dataKey="referrals"
+                  stroke="var(--color-referrals)"
+                  strokeWidth={3}
+                  dot={{ r: 6, fill: "var(--color-referrals)" }}
+                  activeDot={{ r: 8 }}
+                />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Users Table */}
       <Card>
@@ -192,7 +447,11 @@ export default function UsersPage() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-muted/50">
+                    <TableRow
+                      key={user.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => handleUserClick(user)}
+                    >
                       <TableCell className="font-medium">{user.username || 'N/A'}</TableCell>
                       <TableCell className="font-mono text-sm">{user.id || 'N/A'}</TableCell>
                       <TableCell className="text-sm">{user.email || 'N/A'}</TableCell>
