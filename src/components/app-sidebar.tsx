@@ -92,7 +92,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link to="/dashboard">
                 <IconTruckDelivery className="!size-5" />
-                <span className="text-base font-semibold">Push & Deliver</span>
+                <span className="text-base font-semibold">PushNDeliver</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

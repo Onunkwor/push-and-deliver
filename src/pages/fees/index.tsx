@@ -238,8 +238,8 @@ export default function FeesPage() {
                       <TableCell className="text-sm">
                         {fee.surgeMultiplier || 0}x
                       </TableCell>
-                      <TableCell className="font-medium">
-                        ₦{formatAmount(fee.addedSurge || 0)}
+                      <TableCell className="text-sm">
+                        {fee.addedSurge || 0}x
                       </TableCell>
                       <TableCell className="font-medium">
                         ₦{formatAmount(fee.value || 0)}
@@ -343,14 +343,14 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="addedSurge">Added Surge (₦)</Label>
+                                  <Label htmlFor="addedSurge">Added Surge</Label>
                                   <Input
                                     id="addedSurge"
                                     type="number"
                                     value={editValues.addedSurge}
                                     onChange={(e) => setEditValues({ ...editValues, addedSurge: e.target.value })}
                                     placeholder="Enter added surge"
-                                    step="0.01"
+                                    step="0.1"
                                     min="0"
                                     className="mt-2"
                                   />

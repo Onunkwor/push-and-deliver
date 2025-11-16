@@ -11,20 +11,19 @@ import {
 import { db } from '@/lib/firebase';
 import type { Referral } from '@/types';
 
-const COLLECTION_NAME = 'referrals';
+const COLLECTION_NAME = 'Referrals';
 
 export const referralsService = {
   // Read all referrals
   async getAllReferrals(): Promise<Referral[]> {
     try {
-      const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
 
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        completedAt: doc.data().completedAt?.toDate(),
+        createdAt: doc.data().createdAt?.toDate?.(),
+        completedAt: doc.data().completedAt?.toDate?.(),
       })) as Referral[];
     } catch (error) {
       console.error('Error fetching referrals:', error);

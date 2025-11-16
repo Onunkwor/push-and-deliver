@@ -14,6 +14,23 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { restaurantsService } from '@/services/restaurants.service'
 import type { Restaurant, Transaction } from '@/types'
 import { toast } from 'sonner'
@@ -53,6 +70,9 @@ export default function VendorDetailsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingTransactions, setLoadingTransactions] = useState(true)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [newVerificationStatus, setNewVerificationStatus] = useState<string>('')
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -102,6 +122,30 @@ export default function VendorDetailsPage() {
       toast.error('Failed to load restaurant transactions')
     } finally {
       setLoadingTransactions(false)
+    }
+  }
+
+  const handleEditClick = () => {
+    setNewVerificationStatus(restaurant?.verificationStatus || VerificationStatus.unverified)
+    setEditDialogOpen(true)
+  }
+
+  const handleUpdateVerificationStatus = async () => {
+    if (!restaurant?.id || !newVerificationStatus) return
+
+    try {
+      setUpdating(true)
+      await restaurantsService.updateRestaurant(restaurant.id, {
+        verificationStatus: newVerificationStatus
+      })
+      toast.success('Verification status updated successfully')
+      setEditDialogOpen(false)
+      await loadRestaurantData()
+    } catch (error) {
+      console.error('Error updating verification status:', error)
+      toast.error('Failed to update verification status')
+    } finally {
+      setUpdating(false)
     }
   }
 
@@ -170,9 +214,55 @@ export default function VendorDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Verification Status</p>
-              <Badge variant={getVerificationBadgeVariant(restaurant.verificationStatus) as any}>
-                {getVerificationStatusLabel(restaurant.verificationStatus)}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={getVerificationBadgeVariant(restaurant.verificationStatus) as any}>
+                  {getVerificationStatusLabel(restaurant.verificationStatus)}
+                </Badge>
+                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEditClick}
+                      className="h-6 text-xs"
+                    >
+                      Edit
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Verification Status</DialogTitle>
+                      <DialogDescription>
+                        Update the verification status for {restaurant.legalname || 'this restaurant'}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="status">Verification Status</Label>
+                        <Select value={newVerificationStatus} onValueChange={setNewVerificationStatus}>
+                          <SelectTrigger id="status">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={VerificationStatus.verified}>Verified</SelectItem>
+                            <SelectItem value={VerificationStatus.unverified}>Unverified</SelectItem>
+                            <SelectItem value={VerificationStatus.blocked}>Blocked</SelectItem>
+                            <SelectItem value={VerificationStatus.deleted}>Deleted</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleUpdateVerificationStatus} disabled={updating}>
+                        {updating ? 'Updating...' : 'Update Status'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Rating</p>

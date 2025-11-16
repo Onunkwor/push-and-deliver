@@ -37,6 +37,9 @@ export default function ReferralsPage() {
         usersService.getAllUsers(),
       ])
 
+      console.log('Referrals data loaded:', referralsData.length, 'referrals')
+      console.log('Users data loaded:', usersData.length, 'users')
+
       setReferrals(referralsData)
 
       // Create a map of users by ID for quick lookup
@@ -49,7 +52,7 @@ export default function ReferralsPage() {
       setUsers(usersMap)
     } catch (error) {
       console.error('Error loading data:', error)
-      toast.error('Failed to load referrals')
+      toast.error('Failed to load referrals. Check console for details.')
     } finally {
       setLoading(false)
     }

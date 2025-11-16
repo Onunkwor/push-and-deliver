@@ -13,13 +13,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -108,6 +112,8 @@ export default function WithdrawalsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [editingWithdrawal, setEditingWithdrawal] = useState<Withdrawal | null>(null)
+  const [newStatus, setNewStatus] = useState<string>('')
 
   useEffect(() => {
     loadWithdrawals()
@@ -150,6 +156,29 @@ export default function WithdrawalsPage() {
     } catch (error) {
       console.error('Error updating withdrawal:', error)
       toast.error('Failed to update withdrawal')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleEditClick = (withdrawal: Withdrawal) => {
+    setEditingWithdrawal(withdrawal)
+    setNewStatus(withdrawal.status?.toString() || '1')
+  }
+
+  const handleSaveStatus = async () => {
+    if (!editingWithdrawal || !newStatus) return
+
+    try {
+      setActionLoading(editingWithdrawal.id!)
+      const statusValue = parseInt(newStatus) as unknown as WithdrawalStatus
+      await withdrawalsService.updateWithdrawalStatus(editingWithdrawal.id!, statusValue)
+      toast.success(`Withdrawal status updated to ${getStatusLabel(statusValue)}`)
+      setEditingWithdrawal(null)
+      await loadWithdrawals()
+    } catch (error) {
+      console.error('Error updating withdrawal:', error)
+      toast.error('Failed to update withdrawal status')
     } finally {
       setActionLoading(null)
     }
@@ -286,7 +315,7 @@ export default function WithdrawalsPage() {
               <BarChart data={statusData} width={500} height={300}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="status" tickLine={false} tickMargin={10} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+                <YAxis tickLine={false} axisLine={false} tickMargin={10} allowDecimals={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="successful" fill="var(--color-successful)" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="pending" fill="var(--color-pending)" radius={[8, 8, 0, 0]} />
@@ -423,37 +452,54 @@ export default function WithdrawalsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={actionLoading === withdrawal.id}>
-                              <MoreHorizontal className="h-4 w-4" />
+                        <Dialog open={editingWithdrawal?.id === withdrawal.id} onOpenChange={(open) => !open && setEditingWithdrawal(null)}>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditClick(withdrawal)}
+                            >
+                              Edit
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {isStatusEqual(withdrawal.status, 1) && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => handleUpdateStatus(withdrawal.id!, WithdrawalStatus.Successful)}
-                                >
-                                  Approve
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleUpdateStatus(withdrawal.id!, WithdrawalStatus.Failed)}
-                                >
-                                  Reject
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {isStatusEqual(withdrawal.status, 0) && (
-                              <DropdownMenuItem
-                                onClick={() => handleUpdateStatus(withdrawal.id!, WithdrawalStatus.Reversed)}
-                              >
-                                Reverse
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Withdrawal Status</DialogTitle>
+                              <DialogDescription>
+                                Update the status for withdrawal to {withdrawal.accountname || 'N/A'} (₦{formatAmount(withdrawal.amount || 0)})
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid gap-2">
+                                <Label htmlFor="status">Status</Label>
+                                <Select value={newStatus} onValueChange={setNewStatus}>
+                                  <SelectTrigger id="status">
+                                    <SelectValue placeholder="Select status" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="0">Successful</SelectItem>
+                                    <SelectItem value="1">Pending</SelectItem>
+                                    <SelectItem value="2">Failed</SelectItem>
+                                    <SelectItem value="3">Reversed</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                <p><strong>Current Status:</strong> <Badge variant={getStatusBadgeVariant(withdrawal.status)}>{getStatusLabel(withdrawal.status)}</Badge></p>
+                                <p className="mt-2"><strong>Bank:</strong> {withdrawal.bankname || 'N/A'}</p>
+                                <p><strong>Account:</strong> {withdrawal.accountnumber || 'N/A'}</p>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setEditingWithdrawal(null)}>
+                                Cancel
+                              </Button>
+                              <Button onClick={handleSaveStatus} disabled={actionLoading === withdrawal.id}>
+                                {actionLoading === withdrawal.id ? 'Updating...' : 'Update Status'}
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                   ))

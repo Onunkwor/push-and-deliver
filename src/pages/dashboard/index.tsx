@@ -458,7 +458,7 @@ export default function DashboardPage() {
               <BarChart data={withdrawalsData} width={500} height={300}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="type" tickLine={false} tickMargin={10} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={10} />
+                <YAxis tickLine={false} axisLine={false} tickMargin={10} allowDecimals={false} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar dataKey="total" fill="var(--color-total)" radius={[8, 8, 0, 0]} />
                 <Bar dataKey="pending" fill="var(--color-pending)" radius={[8, 8, 0, 0]} />
