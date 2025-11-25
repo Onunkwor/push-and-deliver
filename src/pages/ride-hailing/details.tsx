@@ -206,12 +206,6 @@ export default function RideHailingDetailsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={RideHaulingStatus.requested.toString()}>
-                    Requested
-                  </SelectItem>
-                  <SelectItem value={RideHaulingStatus.accepted.toString()}>
-                    Accepted
-                  </SelectItem>
                   <SelectItem value={RideHaulingStatus.onroute.toString()}>
                     On route
                   </SelectItem>
