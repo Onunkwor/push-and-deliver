@@ -95,7 +95,7 @@ export default function RestaurantOrderDetailsPage() {
     );
   }
 
-  const canEditPayment = order.paymentType === 1; // Only cash payments can be edited
+  const canEditPayment = order.paymentType === 1 && !order.ispaid; // Only cash payments can be edited
 
   return (
     <div className="flex flex-col gap-6">
@@ -182,7 +182,7 @@ export default function RestaurantOrderDetailsPage() {
               </div>
             </div>
 
-            {/* Payment Status Toggle - Only for Cash */}
+            {/* Payment Status Toggle - Only for Cash when isPaid is false */}
             {canEditPayment && (
               <>
                 <Separator />
