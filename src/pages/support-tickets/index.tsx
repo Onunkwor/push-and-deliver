@@ -14,6 +14,12 @@ import { Send, User as UserIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useUser } from "@clerk/clerk-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { IconInfoCircle } from "@tabler/icons-react";
 
 // Helper function to format time WhatsApp-style
 const formatWhatsAppTime = (date: Date) => {
@@ -171,6 +177,14 @@ export default function SupportTicketsPage() {
 
               {/* Status Toggle */}
               <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <IconInfoCircle size={12} />
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>Toggle ticket status</p>
+                  </TooltipContent>
+                </Tooltip>
                 <Label htmlFor="ticket-status" className="text-sm">
                   {selectedTicket.status === "closed" ? "Closed" : "Open"}
                 </Label>
