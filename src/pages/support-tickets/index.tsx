@@ -38,6 +38,7 @@ export default function SupportTicketsPage() {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
     null
   );
+  const formRef = useRef<HTMLFormElement>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -91,14 +92,42 @@ export default function SupportTicketsPage() {
   };
 
   const handleStatusToggle = async (checked: boolean) => {
-    if (!selectedTicket?.id) return;
+    if (!selectedTicket?.id || !user?.id) return;
 
     const newStatus = checked ? "closed" : "open";
+
+    // Prevent reopening closed tickets
+    if (selectedTicket.status === "closed" && newStatus === "open") {
+      toast.error("Closed tickets cannot be reopened");
+      return;
+    }
 
     try {
       setUpdatingStatus(true);
       await supportService.updateTicketStatus(selectedTicket.id, newStatus);
-      toast.success(`Ticket ${newStatus === "closed" ? "closed" : "reopened"}`);
+
+      if (newStatus === "closed") {
+        // Send closing message to user
+        const closingMessage =
+          newMessage.trim() ||
+          "This ticket is now closed, I hope all your issues have been resolved. If you have any other issues, please open a new ticket.";
+
+        await supportService.sendSupportMessage(
+          selectedTicket.id,
+          user.id.split("_")[1],
+          closingMessage
+        );
+
+        toast.success("Ticket closed");
+
+        // Clear the message input and close the ticket view after 1.5 seconds
+        setTimeout(() => {
+          setSelectedTicket(null);
+          setNewMessage("");
+        }, 1500);
+      } else {
+        toast.success("Ticket reopened");
+      }
 
       // Update local state
       setSelectedTicket({ ...selectedTicket, status: newStatus });
@@ -121,11 +150,21 @@ export default function SupportTicketsPage() {
             {tickets.map((ticket) => (
               <button
                 key={ticket.id}
-                onClick={() => setSelectedTicket(ticket)}
+                onClick={() => {
+                  if (ticket.status === "closed") {
+                    toast.error("This ticket is closed and cannot be opened");
+                    return;
+                  }
+                  setSelectedTicket(ticket);
+                }}
                 className={cn(
-                  "flex flex-col gap-1 p-4 text-left transition-colors hover:bg-muted/50 border-b",
+                  "flex flex-col gap-1 p-4 text-left transition-colors border-b",
+                  ticket.status === "closed"
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-muted/50",
                   selectedTicket?.id === ticket.id && "bg-muted"
                 )}
+                disabled={ticket.status === "closed"}
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="font-mono text-xs font-medium truncate max-w-[50%] text-muted-foreground">
@@ -182,7 +221,9 @@ export default function SupportTicketsPage() {
                     <IconInfoCircle size={12} />
                   </TooltipTrigger>
                   <TooltipContent side="left">
-                    <p>Toggle ticket status</p>
+                    <p>
+                      Close ticket (On closing a ticket, it cannot be reopened.)
+                    </p>
                   </TooltipContent>
                 </Tooltip>
                 <Label htmlFor="ticket-status" className="text-sm">
@@ -192,16 +233,20 @@ export default function SupportTicketsPage() {
                   id="ticket-status"
                   checked={selectedTicket.status === "closed"}
                   onCheckedChange={handleStatusToggle}
-                  disabled={updatingStatus}
+                  disabled={
+                    updatingStatus || selectedTicket.status === "closed"
+                  }
                 />
               </div>
             </div>
 
             {/* Messages Area - Scrollable */}
-            <ScrollArea className="p-4 overflow-y-auto">
+            <ScrollArea className="px-4 overflow-y-auto">
               <div className="flex flex-col gap-4 max-w-3xl mx-auto">
                 {messages.map((msg, index) => {
                   const isUser = msg.senderId === selectedTicket.userId;
+                  const isFirst = index === 0;
+                  const isLast = index === messages.length - 1;
 
                   return (
                     <div
@@ -210,7 +255,9 @@ export default function SupportTicketsPage() {
                         "flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
                         !isUser
                           ? "ml-auto bg-primary text-primary-foreground"
-                          : "bg-muted"
+                          : "bg-muted",
+                        isFirst && "mt-4",
+                        isLast && "mb-4"
                       )}
                     >
                       {msg.imageurl ? (
@@ -243,6 +290,7 @@ export default function SupportTicketsPage() {
             {/* Input Area - Fixed */}
             <div className="p-4 bg-background border-t">
               <form
+                ref={formRef}
                 onSubmit={handleSendMessage}
                 className="flex gap-2 max-w-3xl mx-auto"
               >
