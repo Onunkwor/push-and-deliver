@@ -120,7 +120,7 @@ export default function RideHailingDetailsPage() {
     );
   }
 
-  const canEditPayment = order.paymentType === 1;
+  const canEditPayment = order.paymentType === 1 && !order.ispaid;
   const isCourier = order.rideType === RideHaulingType.courier;
   const hasRider = !!order.riderID;
 

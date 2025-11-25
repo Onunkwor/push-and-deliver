@@ -127,7 +127,7 @@ export default function ShipmentOrderDetailsPage() {
     );
   }
 
-  const canEditPayment = order.paymentType === 1;
+  const canEditPayment = order.paymentType === 1 && !order.ispaid;
   const isCustomClearance =
     order.shipmentType === IntlShipmentType.customclearance;
   const isExpress = order.shipmentType === IntlShipmentType.express;
