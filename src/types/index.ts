@@ -201,3 +201,24 @@ export interface Coupon {
   isActive: boolean;
   percentageDiscount: number;
 }
+
+export interface TicketMessage {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  message?: string;
+  senderId?: string;
+  timestamp?: Timestamp | Date;
+  type?: "text" | "image";
+  imageurl?: string;
+}
+
+export interface SupportTicket {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
+  lastMessage?: string;
+  lastSender?: string;
+  status?: "open" | "closed" | "pending";
+  userId?: string;
+  messages?: TicketMessage[];
+}

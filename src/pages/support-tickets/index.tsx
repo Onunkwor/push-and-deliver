@@ -1,0 +1,221 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { supportService } from "@/services/support.service";
+import type { SupportTicket, TicketMessage } from "@/types";
+import { format } from "date-fns";
+import { Send, User as UserIcon, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useUser } from "@clerk/clerk-react";
+
+export default function SupportTicketsPage() {
+  const { user } = useUser();
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
+    null
+  );
+  const [messages, setMessages] = useState<TicketMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Subscribe to tickets
+  useEffect(() => {
+    const unsubscribe = supportService.getSupportTickets((data) => {
+      setTickets(data);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Subscribe to messages when a ticket is selected
+  useEffect(() => {
+    if (!selectedTicket?.id) return;
+
+    const unsubscribe = supportService.getTicketMessages(
+      selectedTicket.id,
+      (data) => {
+        setMessages(data);
+        // Scroll to bottom on new messages
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      }
+    );
+    return () => unsubscribe();
+  }, [selectedTicket?.id]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedTicket?.id || !user?.id) return;
+
+    try {
+      setSending(true);
+      await supportService.sendSupportMessage(
+        selectedTicket.id,
+        user.id.split("_")[1],
+        newMessage
+      );
+      setNewMessage("");
+    } catch (error) {
+      toast.error("Failed to send message");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-2rem)] overflow-hidden rounded-lg border bg-background shadow-sm">
+      {/* Left Sidebar - Ticket List */}
+      <div className="w-1/3 border-r flex flex-col min-w-[300px]">
+        <div className="p-4 border-b bg-muted/30">
+          <h2 className="font-semibold text-lg">Support Tickets</h2>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="flex flex-col">
+            {tickets.map((ticket) => (
+              <button
+                key={ticket.id}
+                onClick={() => setSelectedTicket(ticket)}
+                className={cn(
+                  "flex flex-col gap-1 p-4 text-left transition-colors hover:bg-muted/50 border-b",
+                  selectedTicket?.id === ticket.id && "bg-muted"
+                )}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-mono text-xs font-medium truncate max-w-[50%] text-muted-foreground">
+                    {ticket.id}
+                  </span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {ticket.updatedAt
+                      ? format(new Date(ticket.updatedAt as Date), "h:mm a")
+                      : ""}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between w-full mt-1">
+                  <span className="text-sm truncate text-foreground/90 font-medium w-full">
+                    {ticket.lastMessage || "No messages"}
+                  </span>
+                </div>
+              </button>
+            ))}
+            {tickets.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground text-sm">
+                No tickets found
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Right Main Area - Chat Interface with Grid Layout */}
+      <div className="flex-1 bg-muted/10 overflow-hidden">
+        {selectedTicket ? (
+          <div className="h-full grid grid-rows-[auto_1fr_auto]">
+            {/* Chat Header - Fixed */}
+            <div className="p-4 border-b bg-background flex items-center gap-3 shadow-sm">
+              <Avatar>
+                <AvatarFallback>
+                  <UserIcon className="h-5 w-5" />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-sm">
+                  Ticket #{selectedTicket.id}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  User ID: {selectedTicket.userId}
+                </p>
+              </div>
+            </div>
+
+            {/* Messages Area - Scrollable */}
+            <ScrollArea className="p-4">
+              <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+                {messages.map((msg, index) => {
+                  const isUser = msg.senderId === selectedTicket.userId;
+
+                  return (
+                    <div
+                      key={msg.id || index}
+                      className={cn(
+                        "flex w-fit max-w-[75%] flex-col gap-2 rounded-lg px-3 py-2 text-sm",
+                        !isUser
+                          ? "ml-auto bg-primary text-primary-foreground"
+                          : "bg-muted"
+                      )}
+                    >
+                      {msg.imageurl ? (
+                        <img
+                          src={msg.imageurl}
+                          alt="attachment"
+                          className="rounded-md max-w-full max-h-[400px] w-auto object-contain bg-black/5"
+                        />
+                      ) : null}
+                      {msg.message && <p>{msg.message}</p>}
+                      <span
+                        className={cn(
+                          "text-[10px] opacity-70",
+                          !isUser
+                            ? "text-primary-foreground/70"
+                            : "text-muted-foreground"
+                        )}
+                      >
+                        {msg.timestamp
+                          ? format(new Date(msg.timestamp as Date), "h:mm a")
+                          : ""}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div ref={scrollRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Input Area - Fixed */}
+            <div className="p-4 bg-background border-t">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex gap-2 max-w-3xl mx-auto"
+              >
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1"
+                  disabled={sending}
+                />
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={sending || !newMessage.trim()}
+                >
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </form>
+            </div>
+          </div>
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground bg-muted/5">
+            <div className="text-center">
+              <h3 className="text-lg font-medium">No Ticket Selected</h3>
+              <p className="text-sm mt-1">
+                Click a support ticket to see messages sent
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

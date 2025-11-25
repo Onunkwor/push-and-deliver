@@ -15,6 +15,7 @@ import WithdrawalsPage from "@/pages/withdrawals";
 import CouponsPage from "@/pages/coupons";
 import SettingsPage from "@/pages/settings";
 import HelpPage from "@/pages/help";
+import SupportTicketsPage from "@/pages/support-tickets";
 
 function Router() {
   return (
@@ -50,6 +51,10 @@ function Router() {
                     <Route path="/referrals" element={<ReferralsPage />} />
                     <Route path="/withdrawals" element={<WithdrawalsPage />} />
                     <Route path="/coupons" element={<CouponsPage />} />
+                    <Route
+                      path="/support-tickets"
+                      element={<SupportTicketsPage />}
+                    />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/help" element={<HelpPage />} />
                     <Route

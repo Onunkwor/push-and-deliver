@@ -10,6 +10,7 @@ import {
   IconSettings,
   IconHelp,
   IconGiftCard,
+  IconHeadset,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -68,6 +69,11 @@ const data = {
       title: "Coupons",
       url: "/coupons",
       icon: IconGiftCard,
+    },
+    {
+      title: "Support Tickets",
+      url: "/support-tickets",
+      icon: IconHeadset,
     },
   ],
   navSecondary: [
