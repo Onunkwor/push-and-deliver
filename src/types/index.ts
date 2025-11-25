@@ -222,3 +222,63 @@ export interface SupportTicket {
   userId?: string;
   messages?: TicketMessage[];
 }
+
+export interface RestaurantOrderCustomer {
+  email?: string;
+  id?: string;
+  imageUrl?: string;
+  name?: string;
+  phoneNumber?: string;
+}
+
+export interface RestaurantOrderLocation {
+  deliveryAddress?: string;
+  geohash?: string;
+  geopoint?: GeoPoint;
+}
+
+export interface RestaurantOrderMenuItem {
+  name?: string;
+  price?: number;
+  quantity?: number;
+  title?: string;
+}
+
+export interface RestaurantOrderRestaurant {
+  address?: string;
+  id?: string;
+  imageURL?: string;
+  name?: string;
+  phoneNumber?: string;
+}
+
+export interface RestaurantOrderStatusTimeline {
+  status?: number;
+  timestamp?: Timestamp | Date;
+}
+
+export interface RestaurantOrder {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  customer?: RestaurantOrderCustomer;
+  declinelist?: any[];
+  deliveryFee?: number;
+  deliveryLocation?: RestaurantOrderLocation;
+  ispaid?: boolean;
+  menuItems?: RestaurantOrderMenuItem[];
+  noteForRestaurant?: string;
+  noteForRider?: string;
+  orderStatus?: number;
+  otp?: number;
+  paymentType?: number; // 0 = wallet, 1 = cash
+  restaurant?: RestaurantOrderRestaurant;
+  restaurantLocation?: {
+    geohash?: string;
+    geopint?: GeoPoint;
+  };
+  riderID?: string;
+  riderPhoneNumber?: string;
+  servicefee?: number;
+  statusTimeline?: RestaurantOrderStatusTimeline[];
+  totalAmount?: number;
+}

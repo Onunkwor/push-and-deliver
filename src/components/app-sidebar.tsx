@@ -11,6 +11,7 @@ import {
   IconHelp,
   IconGiftCard,
   IconHeadset,
+  IconShoppingCart,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -74,6 +75,11 @@ const data = {
       title: "Support Tickets",
       url: "/support-tickets",
       icon: IconHeadset,
+    },
+    {
+      title: "Restaurant Orders",
+      url: "/restaurant-orders",
+      icon: IconShoppingCart,
     },
   ],
   navSecondary: [
