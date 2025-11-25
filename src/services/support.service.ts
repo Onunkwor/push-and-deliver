@@ -1,4 +1,14 @@
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  runTransaction,
+  Timestamp,
+  doc,
+  addDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { SupportTicket, TicketMessage } from "@/types";
 
@@ -52,24 +62,24 @@ export const supportService = {
     message: string
   ) => {
     try {
-      const formData = new FormData();
-      formData.append("ticketId", ticketId);
-      formData.append("userId", userId);
-      formData.append("message", message);
-
-      const response = await fetch(
-        "https://us-central1-pushndeliver-dev.cloudfunctions.net/createSupportTicketMessage",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
-
-      return await response.json();
+      const payload = {
+        senderId: userId,
+        message,
+        createdAt: Timestamp.fromDate(new Date()),
+        timestamp: Timestamp.fromDate(new Date()),
+        imageurl: "",
+        // type: buffer
+      };
+      await runTransaction(db, async (transaction) => {
+        const ticketRef = doc(db, COLLECTION_NAME, ticketId);
+        const messagesRef = collection(ticketRef, MESSAGES_SUBCOLLECTION);
+        await addDoc(messagesRef, payload);
+        transaction.update(ticketRef, {
+          lastMessage: message,
+          lastSender: userId,
+          updatedAt: Timestamp.fromDate(new Date()),
+        });
+      });
     } catch (error) {
       console.error("Error sending support message:", error);
       throw error;
@@ -79,7 +89,6 @@ export const supportService = {
   // Update ticket status
   updateTicketStatus: async (ticketId: string, status: "open" | "closed") => {
     try {
-      const { doc, updateDoc } = await import("firebase/firestore");
       const ticketRef = doc(db, COLLECTION_NAME, ticketId);
       await updateDoc(ticketRef, {
         status,
