@@ -368,3 +368,79 @@ export interface ShipmentOrder {
   widthinCM?: number;
   zipcode?: string;
 }
+
+// Ride Hailing Enums
+export const RideHaulingType = {
+  regular: 0,
+  discountexpress: 1,
+  express: 2,
+  premier: 3,
+  courier: 4,
+} as const;
+export type RideHaulingType =
+  (typeof RideHaulingType)[keyof typeof RideHaulingType];
+
+export const RideHaulingStatus = {
+  requested: 0,
+  accepted: 1,
+  onroute: 2,
+  completed: 3,
+  cancelled: 4,
+  expired: 5,
+  courierdeliverdtopnd: 6,
+} as const;
+export type RideHaulingStatus =
+  (typeof RideHaulingStatus)[keyof typeof RideHaulingStatus];
+
+export interface RideHaulingLocation {
+  geohash?: string;
+  geopoint?: GeoPoint;
+}
+
+export interface RideHaulingStatusTimeline {
+  status?: number;
+  timestamp?: Timestamp | Date;
+}
+
+export interface RideHaulingOrder {
+  id?: string;
+  cancellationReason?: string;
+  cancelledAt?: Timestamp | Date | null;
+  canclledBy?: string;
+  completedAt?: Timestamp | Date | null;
+  createdAt?: Timestamp | Date;
+  customerID?: string;
+  customerName?: string;
+  customerPhonenumber?: string;
+  declinelist?: any[];
+  dropoffAddress?: string;
+  dropoffLocation?: RideHaulingLocation;
+  estimatedDistanceMeters?: number;
+  estimatedDurationSeconds?: number;
+  ispaid?: boolean;
+  orderStatus?: number;
+  otp?: number;
+  paymentType?: number; // 0 = wallet, 1 = cash
+  pndofficeaddress?: string;
+  pndofficelocation?: RideHaulingLocation;
+  receivername?: string;
+  receiverphonenumber?: string;
+  rideType?: number;
+  riderCarColor?: string;
+  riderCarModel?: string;
+  riderCarName?: string;
+  riderCarPlateNumber?: string;
+  riderID?: string;
+  riderImageURL?: string;
+  riderLocationUpdateDocID?: string;
+  riderName?: string;
+  riderPhoneNumber?: string;
+  riderscutpercentage?: number;
+  startoffAddress?: string;
+  startoffLocation?: RideHaulingLocation;
+  statusTimeline?: RideHaulingStatusTimeline[];
+  totalAmount?: number;
+  transactionID?: string;
+  usedCoupon?: boolean;
+  vehicleType?: string | null;
+}
