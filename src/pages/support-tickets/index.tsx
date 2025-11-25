@@ -198,8 +198,8 @@ export default function SupportTicketsPage() {
             </div>
 
             {/* Messages Area - Scrollable */}
-            <ScrollArea className="p-4">
-              <div className="flex flex-col gap-4 max-w-3xl mx-auto overflow-auto">
+            <ScrollArea className="p-4 overflow-y-auto">
+              <div className="flex flex-col gap-4 max-w-3xl mx-auto">
                 {messages.map((msg, index) => {
                   const isUser = msg.senderId === selectedTicket.userId;
 
