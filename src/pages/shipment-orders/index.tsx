@@ -151,9 +151,14 @@ export default function ShipmentOrdersPage() {
   const deliveredShipments = orders.filter(
     (o) => o.orderStatus === ShipmentOrderStatus.deliveredToDestination
   ).length;
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const totalRevenue = orders
+    .filter((o) => o.ispaid)
+    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const deliveredRevenue = orders
-    .filter((o) => o.orderStatus === ShipmentOrderStatus.deliveredToDestination)
+    .filter(
+      (o) =>
+        o.orderStatus === ShipmentOrderStatus.deliveredToDestination && o.ispaid
+    )
     .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   return (

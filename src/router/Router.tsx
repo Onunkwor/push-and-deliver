@@ -1,27 +1,25 @@
 // src/router/Router.tsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Layout } from "@/components/layout";
+import CouponsPage from "@/pages/coupons";
 import DashboardPage from "@/pages/dashboard";
-import UsersPage from "@/pages/users";
-import UserDetailsPage from "@/pages/users/details";
-import RidersPage from "@/pages/riders";
-import RiderDetailsPage from "@/pages/riders/details";
-import VendorsPage from "@/pages/vendors";
-import VendorDetailsPage from "@/pages/vendors/details";
 import FeesPage from "@/pages/fees";
 import ReferralsPage from "@/pages/referrals";
-import WithdrawalsPage from "@/pages/withdrawals";
-import CouponsPage from "@/pages/coupons";
-import SettingsPage from "@/pages/settings";
-import HelpPage from "@/pages/help";
-import SupportTicketsPage from "@/pages/support-tickets";
 import RestaurantOrdersPage from "@/pages/restaurant-orders";
 import RestaurantOrderDetailsPage from "@/pages/restaurant-orders/details";
-import ShipmentOrdersPage from "@/pages/shipment-orders";
-import ShipmentOrderDetailsPage from "@/pages/shipment-orders/details";
 import RideHailingPage from "@/pages/ride-hailing";
 import RideHailingDetailsPage from "@/pages/ride-hailing/details";
+import RidersPage from "@/pages/riders";
+import RiderDetailsPage from "@/pages/riders/details";
+import ShipmentOrdersPage from "@/pages/shipment-orders";
+import ShipmentOrderDetailsPage from "@/pages/shipment-orders/details";
+import SupportTicketsPage from "@/pages/support-tickets";
+import UsersPage from "@/pages/users";
+import UserDetailsPage from "@/pages/users/details";
+import VendorsPage from "@/pages/vendors";
+import VendorDetailsPage from "@/pages/vendors/details";
+import WithdrawalsPage from "@/pages/withdrawals";
+import { SignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 function Router() {
   return (
@@ -81,12 +79,6 @@ function Router() {
                     <Route
                       path="/ride-hailing/:id"
                       element={<RideHailingDetailsPage />}
-                    />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/help" element={<HelpPage />} />
-                    <Route
-                      path="/"
-                      element={<Navigate to="/dashboard" replace />}
                     />
                   </Routes>
                 </Layout>

@@ -1,23 +1,20 @@
 // src/components/app-sidebar.tsx
 import {
-  IconDashboard,
-  IconUsers,
-  IconMotorbike,
-  IconTruckDelivery,
-  IconCoin,
-  IconGift,
+  IconCar,
   IconCash,
-  IconSettings,
-  IconHelp,
+  IconCoin,
+  IconDashboard,
+  IconGift,
   IconGiftCard,
   IconHeadset,
-  IconShoppingCart,
+  IconMotorbike,
   IconPlane,
-  IconCar,
+  IconShoppingCart,
+  IconTruckDelivery,
+  IconUsers,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -94,18 +91,6 @@ const data = {
       icon: IconCar,
     },
   ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: IconSettings,
-    },
-    {
-      title: "Help & Support",
-      url: "/help",
-      icon: IconHelp,
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -130,7 +115,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser

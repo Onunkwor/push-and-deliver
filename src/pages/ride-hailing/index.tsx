@@ -146,9 +146,11 @@ export default function RideHailingPage() {
   const completedRides = orders.filter(
     (o) => o.orderStatus === RideHaulingStatus.completed
   ).length;
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const totalRevenue = orders
+    .filter((o) => o.ispaid)
+    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const completedRevenue = orders
-    .filter((o) => o.orderStatus === RideHaulingStatus.completed)
+    .filter((o) => o.orderStatus === RideHaulingStatus.completed && o.ispaid)
     .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   return (
