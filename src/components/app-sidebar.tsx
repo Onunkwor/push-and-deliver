@@ -9,11 +9,12 @@ import {
   IconCash,
   IconSettings,
   IconHelp,
-} from "@tabler/icons-react"
+  IconGiftCard,
+} from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -22,9 +23,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { useUser } from "@clerk/clerk-react"
-import { Link } from "react-router-dom"
+} from "@/components/ui/sidebar";
+import { useUser } from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
 
 const data = {
   navMain: [
@@ -63,6 +64,11 @@ const data = {
       url: "/withdrawals",
       icon: IconCash,
     },
+    {
+      title: "Coupons",
+      url: "/coupons",
+      icon: IconGiftCard,
+    },
   ],
   navSecondary: [
     {
@@ -76,10 +82,10 @@ const data = {
       icon: IconHelp,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser()
+  const { user } = useUser();
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -103,12 +109,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{
-          name: user?.fullName || "Admin",
-          email: user?.primaryEmailAddress?.emailAddress || "",
-          avatar: user?.imageUrl || "",
-        }} />
+        <NavUser
+          user={{
+            name: user?.fullName || "Admin",
+            email: user?.primaryEmailAddress?.emailAddress || "",
+            avatar: user?.imageUrl || "",
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
