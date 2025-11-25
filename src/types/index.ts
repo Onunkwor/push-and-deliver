@@ -1,50 +1,54 @@
 // src/types/index.ts - Updated to match Firebase schema
-import { Timestamp, GeoPoint } from 'firebase/firestore';
+import { Timestamp, GeoPoint } from "firebase/firestore";
 
 // Type definitions (replacing enums for erasableSyntaxOnly compatibility)
 export const VehicleType = {
   car: "car",
   bicycle: "bicycle",
-  bike: "bike"
+  bike: "bike",
 } as const;
-export type VehicleType = typeof VehicleType[keyof typeof VehicleType];
+export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType];
 
 export const VerificationStatus = {
   unverified: "unverified",
   verified: "verified",
   blocked: "blocked",
-  deleted: "deleted"
+  deleted: "deleted",
 } as const;
-export type VerificationStatus = typeof VerificationStatus[keyof typeof VerificationStatus];
+export type VerificationStatus =
+  (typeof VerificationStatus)[keyof typeof VerificationStatus];
 
 export const WithdrawalStatus = {
   Successful: "Successful",
   Pending: "Pending",
   Failed: "Failed",
-  Reversed: "Reversed"
+  Reversed: "Reversed",
 } as const;
-export type WithdrawalStatus = typeof WithdrawalStatus[keyof typeof WithdrawalStatus];
+export type WithdrawalStatus =
+  (typeof WithdrawalStatus)[keyof typeof WithdrawalStatus];
 
 export const TransactionStatus = {
   Successful: "Successful",
   Pending: "Pending",
-  Failed: "Failed"
+  Failed: "Failed",
 } as const;
-export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
+export type TransactionStatus =
+  (typeof TransactionStatus)[keyof typeof TransactionStatus];
 
 export const TransactionType = {
   Credit: "Credit",
-  Debit: "Debit"
+  Debit: "Debit",
 } as const;
-export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
+export type TransactionType =
+  (typeof TransactionType)[keyof typeof TransactionType];
 
 export const FeeType = {
   fooddeliveryfee: 0,
   servicefee: 1,
   ridehauling: 2,
-  freightbooking: 3
+  freightbooking: 3,
 } as const;
-export type FeeType = typeof FeeType[keyof typeof FeeType];
+export type FeeType = (typeof FeeType)[keyof typeof FeeType];
 
 // Interfaces
 export interface Rider {
@@ -164,17 +168,17 @@ export interface Referral {
 }
 
 export interface Fee {
-  id: string
-  feeType?: FeeType
-  name?: string
-  bookingFee?: number
-  perKm?: number
-  perMin?: number
-  perWeight?: number
-  minFare?: number
-  surgeMultiplier?: number
-  addedSurge?: number
-  value?: number
+  id: string;
+  feeType?: FeeType;
+  name?: string;
+  bookingFee?: number;
+  perKm?: number;
+  perMin?: number;
+  perWeight?: number;
+  minFare?: number;
+  surgeMultiplier?: number;
+  addedSurge?: number;
+  value?: number;
 }
 // Legacy types (kept for compatibility, will be removed)
 export interface Vendor extends Restaurant {}
@@ -182,11 +186,261 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'promotion' | 'alert';
-  targetAudience: 'all' | 'users' | 'riders' | 'vendors';
-  status: 'draft' | 'scheduled' | 'sent';
+  type: "info" | "warning" | "promotion" | "alert";
+  targetAudience: "all" | "users" | "riders" | "vendors";
+  status: "draft" | "scheduled" | "sent";
   scheduledFor?: Date;
   sentAt?: Date;
   createdBy: string;
   createdAt: Date;
+}
+
+export interface Coupon {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  isActive: boolean;
+  percentageDiscount: number;
+}
+
+export interface TicketMessage {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  message?: string;
+  senderId?: string;
+  timestamp?: Timestamp | Date;
+  type?: "text" | "image";
+  imageurl?: string;
+}
+
+export interface SupportTicket {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
+  lastMessage?: string;
+  lastSender?: string;
+  status?: "open" | "closed" | "pending";
+  userId?: string;
+  messages?: TicketMessage[];
+}
+
+export interface RestaurantOrderCustomer {
+  email?: string;
+  id?: string;
+  imageUrl?: string;
+  name?: string;
+  phoneNumber?: string;
+}
+
+export interface RestaurantOrderLocation {
+  deliveryAddress?: string;
+  geohash?: string;
+  geopoint?: GeoPoint;
+}
+
+export interface RestaurantOrderMenuItem {
+  name?: string;
+  price?: number;
+  quantity?: number;
+  title?: string;
+}
+
+export interface RestaurantOrderRestaurant {
+  address?: string;
+  id?: string;
+  imageURL?: string;
+  name?: string;
+  phoneNumber?: string;
+}
+
+export interface RestaurantOrderStatusTimeline {
+  status?: number;
+  timestamp?: Timestamp | Date;
+}
+
+export interface RestaurantOrder {
+  id?: string;
+  createdAt?: Timestamp | Date;
+  customer?: RestaurantOrderCustomer;
+  declinelist?: any[];
+  deliveryFee?: number;
+  deliveryLocation?: RestaurantOrderLocation;
+  ispaid?: boolean;
+  menuItems?: RestaurantOrderMenuItem[];
+  noteForRestaurant?: string;
+  noteForRider?: string;
+  orderStatus?: number;
+  otp?: number;
+  paymentType?: number; // 0 = wallet, 1 = cash
+  restaurant?: RestaurantOrderRestaurant;
+  restaurantLocation?: {
+    geohash?: string;
+    geopint?: GeoPoint;
+  };
+  riderID?: string;
+  riderPhoneNumber?: string;
+  servicefee?: number;
+  statusTimeline?: RestaurantOrderStatusTimeline[];
+  totalAmount?: number;
+}
+
+// Shipment Order Enums
+export const ShipmentOrderStatus = {
+  placed: 0,
+  acceptedByRider: 1,
+  sentToHq: 2,
+  onrouteToDestination: 3,
+  deliveredToDestination: 4,
+  cancelled: 5,
+  onRouteToPndHQ: 6,
+} as const;
+export type ShipmentOrderStatus =
+  (typeof ShipmentOrderStatus)[keyof typeof ShipmentOrderStatus];
+
+export const IntlShipmentType = {
+  customclearance: 0,
+  express: 1,
+} as const;
+export type IntlShipmentType =
+  (typeof IntlShipmentType)[keyof typeof IntlShipmentType];
+
+export const ShipmentCustomClearanceType = {
+  seaconsignment: 0,
+  airconsignment: 1,
+} as const;
+export type ShipmentCustomClearanceType =
+  (typeof ShipmentCustomClearanceType)[keyof typeof ShipmentCustomClearanceType];
+
+export interface ShipmentLocation {
+  geohash?: string;
+  geopoint?: GeoPoint;
+}
+
+export interface ShipmentStatusTimeline {
+  status?: number;
+  timestamp?: Timestamp | Date;
+}
+
+export interface ShipmentOrder {
+  id?: string;
+  breadthinCM?: number;
+  cancelledAt?: Timestamp | Date | null;
+  clearanceType?: number;
+  clearancedocument?: string;
+  completedAt?: Timestamp | Date | null;
+  country?: string;
+  createdAt?: Timestamp | Date;
+  customerID?: string;
+  customerName?: string;
+  customerPhonenumber?: string;
+  declinelist?: any[];
+  dropoffAddress?: string;
+  dropoffLocation?: ShipmentLocation;
+  heightinCM?: number;
+  ispaid?: boolean;
+  itemType?: string;
+  itemvalue?: number;
+  orderStatus?: number;
+  paymentType?: number; // 0 = wallet, 1 = cash
+  pndofficeaddress?: string;
+  pndofficelocation?: ShipmentLocation;
+  receiveremail?: string;
+  receivername?: string;
+  receiverphonenumber?: string;
+  riderCarColor?: string;
+  riderCarModel?: string;
+  riderCarName?: string;
+  riderCarPlateNumber?: string;
+  riderID?: string;
+  riderImageURL?: string;
+  riderName?: string;
+  riderPhoneNumber?: string;
+  senderemailaddress?: string;
+  shipmentID?: string;
+  shipmentType?: number; // 0 = custom clearance, 1 = express
+  startoffAddress?: string;
+  startoffLocation?: ShipmentLocation;
+  statusTimeline?: ShipmentStatusTimeline[];
+  totalAmount?: number;
+  transactionID?: string;
+  usedCoupon?: boolean;
+  vehicleType?: string | null;
+  weightinKG?: number;
+  widthinCM?: number;
+  zipcode?: string;
+}
+
+// Ride Hailing Enums
+export const RideHaulingType = {
+  regular: 0,
+  discountexpress: 1,
+  express: 2,
+  premier: 3,
+  courier: 4,
+} as const;
+export type RideHaulingType =
+  (typeof RideHaulingType)[keyof typeof RideHaulingType];
+
+export const RideHaulingStatus = {
+  requested: 0,
+  accepted: 1,
+  onroute: 2,
+  completed: 3,
+  cancelled: 4,
+  expired: 5,
+  courierdeliverdtopnd: 6,
+} as const;
+export type RideHaulingStatus =
+  (typeof RideHaulingStatus)[keyof typeof RideHaulingStatus];
+
+export interface RideHaulingLocation {
+  geohash?: string;
+  geopoint?: GeoPoint;
+}
+
+export interface RideHaulingStatusTimeline {
+  status?: number;
+  timestamp?: Timestamp | Date;
+}
+
+export interface RideHaulingOrder {
+  id?: string;
+  cancellationReason?: string;
+  cancelledAt?: Timestamp | Date | null;
+  canclledBy?: string;
+  completedAt?: Timestamp | Date | null;
+  createdAt?: Timestamp | Date;
+  customerID?: string;
+  customerName?: string;
+  customerPhonenumber?: string;
+  declinelist?: any[];
+  dropoffAddress?: string;
+  dropoffLocation?: RideHaulingLocation;
+  estimatedDistanceMeters?: number;
+  estimatedDurationSeconds?: number;
+  ispaid?: boolean;
+  orderStatus?: number;
+  otp?: number;
+  paymentType?: number; // 0 = wallet, 1 = cash
+  pndofficeaddress?: string;
+  pndofficelocation?: RideHaulingLocation;
+  receivername?: string;
+  receiverphonenumber?: string;
+  rideType?: number;
+  riderCarColor?: string;
+  riderCarModel?: string;
+  riderCarName?: string;
+  riderCarPlateNumber?: string;
+  riderID?: string;
+  riderImageURL?: string;
+  riderLocationUpdateDocID?: string;
+  riderName?: string;
+  riderPhoneNumber?: string;
+  riderscutpercentage?: number;
+  startoffAddress?: string;
+  startoffLocation?: RideHaulingLocation;
+  statusTimeline?: RideHaulingStatusTimeline[];
+  totalAmount?: number;
+  transactionID?: string;
+  usedCoupon?: boolean;
+  vehicleType?: string | null;
 }

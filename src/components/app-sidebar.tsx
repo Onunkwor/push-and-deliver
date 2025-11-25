@@ -1,19 +1,21 @@
 // src/components/app-sidebar.tsx
 import {
-  IconDashboard,
-  IconUsers,
-  IconMotorbike,
-  IconTruckDelivery,
-  IconCoin,
-  IconGift,
+  IconCar,
   IconCash,
-  IconSettings,
-  IconHelp,
-} from "@tabler/icons-react"
+  IconCoin,
+  IconDashboard,
+  IconGift,
+  IconGiftCard,
+  IconHeadset,
+  IconMotorbike,
+  IconPlane,
+  IconShoppingCart,
+  IconTruckDelivery,
+  IconUsers,
+} from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -22,9 +24,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { useUser } from "@clerk/clerk-react"
-import { Link } from "react-router-dom"
+} from "@/components/ui/sidebar";
+import { useUser } from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
 
 const data = {
   navMain: [
@@ -63,23 +65,36 @@ const data = {
       url: "/withdrawals",
       icon: IconCash,
     },
-  ],
-  navSecondary: [
     {
-      title: "Settings",
-      url: "/settings",
-      icon: IconSettings,
+      title: "Coupons",
+      url: "/coupons",
+      icon: IconGiftCard,
     },
     {
-      title: "Help & Support",
-      url: "/help",
-      icon: IconHelp,
+      title: "Support Tickets",
+      url: "/support-tickets",
+      icon: IconHeadset,
+    },
+    {
+      title: "Restaurant Orders",
+      url: "/restaurant-orders",
+      icon: IconShoppingCart,
+    },
+    {
+      title: "Shipment Orders",
+      url: "/shipment-orders",
+      icon: IconPlane,
+    },
+    {
+      title: "Ride Hailing",
+      url: "/ride-hailing",
+      icon: IconCar,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser()
+  const { user } = useUser();
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -100,15 +115,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{
-          name: user?.fullName || "Admin",
-          email: user?.primaryEmailAddress?.emailAddress || "",
-          avatar: user?.imageUrl || "",
-        }} />
+        <NavUser
+          user={{
+            name: user?.fullName || "Admin",
+            email: user?.primaryEmailAddress?.emailAddress || "",
+            avatar: user?.imageUrl || "",
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
