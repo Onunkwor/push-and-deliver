@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { restaurantOrdersService } from "@/services/restaurant-orders.service";
@@ -27,12 +28,14 @@ import {
   IconWallet,
   IconCheck,
   IconX,
+  IconSearch,
 } from "@tabler/icons-react";
 
 export default function RestaurantOrdersPage() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<RestaurantOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     loadOrders();
@@ -50,6 +53,11 @@ export default function RestaurantOrdersPage() {
       setLoading(false);
     }
   };
+
+  // Filter orders by customer name
+  const filteredOrders = orders.filter((order) =>
+    order.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Calculate metrics
   const totalOrders = orders.length;
@@ -135,10 +143,23 @@ export default function RestaurantOrdersPage() {
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Orders</CardTitle>
-          <CardDescription>
-            Click on any order to view full details
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>All Orders</CardTitle>
+              <CardDescription>
+                Click on any order to view full details
+              </CardDescription>
+            </div>
+            <div className="relative w-64">
+              <IconSearch className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by customer name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -176,17 +197,19 @@ export default function RestaurantOrdersPage() {
                     </TableCell>
                   </TableRow>
                 ))
-              ) : orders.length === 0 ? (
+              ) : filteredOrders.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={6}
                     className="text-center text-muted-foreground py-8"
                   >
-                    No orders found
+                    {searchQuery
+                      ? "No orders found matching your search"
+                      : "No orders found"}
                   </TableCell>
                 </TableRow>
               ) : (
-                orders.map((order) => (
+                filteredOrders.map((order) => (
                   <TableRow
                     key={order.id}
                     className="cursor-pointer hover:bg-muted/50"

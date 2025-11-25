@@ -17,7 +17,7 @@ import SettingsPage from "@/pages/settings";
 import HelpPage from "@/pages/help";
 import SupportTicketsPage from "@/pages/support-tickets";
 import RestaurantOrdersPage from "@/pages/restaurant-orders";
-import RestaurantOrderDetailsPage from "@/pages/restaurant-orders/[id]";
+import RestaurantOrderDetailsPage from "@/pages/restaurant-orders/details";
 
 function Router() {
   return (
