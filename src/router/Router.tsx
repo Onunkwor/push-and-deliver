@@ -18,6 +18,8 @@ import HelpPage from "@/pages/help";
 import SupportTicketsPage from "@/pages/support-tickets";
 import RestaurantOrdersPage from "@/pages/restaurant-orders";
 import RestaurantOrderDetailsPage from "@/pages/restaurant-orders/details";
+import ShipmentOrdersPage from "@/pages/shipment-orders";
+import ShipmentOrderDetailsPage from "@/pages/shipment-orders/details";
 
 function Router() {
   return (
@@ -64,6 +66,14 @@ function Router() {
                     <Route
                       path="/restaurant-orders/:id"
                       element={<RestaurantOrderDetailsPage />}
+                    />
+                    <Route
+                      path="/shipment-orders"
+                      element={<ShipmentOrdersPage />}
+                    />
+                    <Route
+                      path="/shipment-orders/:id"
+                      element={<ShipmentOrderDetailsPage />}
                     />
                     <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/help" element={<HelpPage />} />

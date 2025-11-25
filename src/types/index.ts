@@ -282,3 +282,89 @@ export interface RestaurantOrder {
   statusTimeline?: RestaurantOrderStatusTimeline[];
   totalAmount?: number;
 }
+
+// Shipment Order Enums
+export const ShipmentOrderStatus = {
+  placed: 0,
+  acceptedByRider: 1,
+  sentToHq: 2,
+  onrouteToDestination: 3,
+  deliveredToDestination: 4,
+  cancelled: 5,
+  onRouteToPndHQ: 6,
+} as const;
+export type ShipmentOrderStatus =
+  (typeof ShipmentOrderStatus)[keyof typeof ShipmentOrderStatus];
+
+export const IntlShipmentType = {
+  customclearance: 0,
+  express: 1,
+} as const;
+export type IntlShipmentType =
+  (typeof IntlShipmentType)[keyof typeof IntlShipmentType];
+
+export const ShipmentCustomClearanceType = {
+  seaconsignment: 0,
+  airconsignment: 1,
+} as const;
+export type ShipmentCustomClearanceType =
+  (typeof ShipmentCustomClearanceType)[keyof typeof ShipmentCustomClearanceType];
+
+export interface ShipmentLocation {
+  geohash?: string;
+  geopoint?: GeoPoint;
+}
+
+export interface ShipmentStatusTimeline {
+  status?: number;
+  timestamp?: Timestamp | Date;
+}
+
+export interface ShipmentOrder {
+  id?: string;
+  breadthinCM?: number;
+  cancelledAt?: Timestamp | Date | null;
+  clearanceType?: number;
+  clearancedocument?: string;
+  completedAt?: Timestamp | Date | null;
+  country?: string;
+  createdAt?: Timestamp | Date;
+  customerID?: string;
+  customerName?: string;
+  customerPhonenumber?: string;
+  declinelist?: any[];
+  dropoffAddress?: string;
+  dropoffLocation?: ShipmentLocation;
+  heightinCM?: number;
+  ispaid?: boolean;
+  itemType?: string;
+  itemvalue?: number;
+  orderStatus?: number;
+  paymentType?: number; // 0 = wallet, 1 = cash
+  pndofficeaddress?: string;
+  pndofficelocation?: ShipmentLocation;
+  receiveremail?: string;
+  receivername?: string;
+  receiverphonenumber?: string;
+  riderCarColor?: string;
+  riderCarModel?: string;
+  riderCarName?: string;
+  riderCarPlateNumber?: string;
+  riderID?: string;
+  riderImageURL?: string;
+  riderName?: string;
+  riderPhoneNumber?: string;
+  senderemailaddress?: string;
+  shipmentID?: string;
+  shipmentType?: number; // 0 = custom clearance, 1 = express
+  startoffAddress?: string;
+  startoffLocation?: ShipmentLocation;
+  statusTimeline?: ShipmentStatusTimeline[];
+  totalAmount?: number;
+  transactionID?: string;
+  usedCoupon?: boolean;
+  vehicleType?: string | null;
+  weightinKG?: number;
+  widthinCM?: number;
+  zipcode?: string;
+}
