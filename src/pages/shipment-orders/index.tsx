@@ -36,6 +36,13 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { IconPackage, IconSearch, IconFilter } from "@tabler/icons-react";
 
+const formatAmount = (amount: number) => {
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 export default function ShipmentOrdersPage() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<ShipmentOrder[]>([]);
@@ -131,6 +138,24 @@ export default function ShipmentOrdersPage() {
     navigate(`/shipment-orders/${orderId}`);
   };
 
+  // Calculate metrics
+  const totalShipments = orders.length;
+  const activeShipments = orders.filter(
+    (o) =>
+      o.orderStatus === ShipmentOrderStatus.placed ||
+      o.orderStatus === ShipmentOrderStatus.acceptedByRider ||
+      o.orderStatus === ShipmentOrderStatus.sentToHq ||
+      o.orderStatus === ShipmentOrderStatus.onrouteToDestination ||
+      o.orderStatus === ShipmentOrderStatus.onRouteToPndHQ
+  ).length;
+  const deliveredShipments = orders.filter(
+    (o) => o.orderStatus === ShipmentOrderStatus.deliveredToDestination
+  ).length;
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const deliveredRevenue = orders
+    .filter((o) => o.orderStatus === ShipmentOrderStatus.deliveredToDestination)
+    .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -140,6 +165,100 @@ export default function ShipmentOrdersPage() {
           Manage and track all international shipment orders
         </p>
       </div>
+
+      {/* Metrics Cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-[hsl(220,40%,45%)] bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/20 dark:to-background">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Shipments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                style={{ color: "hsl(220, 40%, 45%)" }}
+              >
+                {totalShipments}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                All shipment orders
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-[hsl(30,50%,48%)] bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-background">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Active Shipments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                style={{ color: "hsl(30, 50%, 48%)" }}
+              >
+                {activeShipments}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Currently in progress
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-[hsl(150,35%,42%)] bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-background">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Delivered Shipments
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                style={{ color: "hsl(150, 35%, 42%)" }}
+              >
+                {deliveredShipments}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                ₦{formatAmount(deliveredRevenue)} earned
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-[hsl(280,40%,50%)] bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/20 dark:to-background">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="text-3xl font-bold"
+                style={{ color: "hsl(280, 40%, 50%)" }}
+              >
+                ₦{formatAmount(totalRevenue)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                From all shipments
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Orders Table */}
       <Card>
