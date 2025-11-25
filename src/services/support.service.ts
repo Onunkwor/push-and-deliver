@@ -75,4 +75,19 @@ export const supportService = {
       throw error;
     }
   },
+
+  // Update ticket status
+  updateTicketStatus: async (ticketId: string, status: "open" | "closed") => {
+    try {
+      const { doc, updateDoc } = await import("firebase/firestore");
+      const ticketRef = doc(db, COLLECTION_NAME, ticketId);
+      await updateDoc(ticketRef, {
+        status,
+        updatedAt: new Date(),
+      });
+    } catch (error) {
+      console.error("Error updating ticket status:", error);
+      throw error;
+    }
+  },
 };

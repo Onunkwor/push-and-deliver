@@ -5,13 +5,26 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { supportService } from "@/services/support.service";
 import type { SupportTicket, TicketMessage } from "@/types";
-import { format } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { Send, User as UserIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useUser } from "@clerk/clerk-react";
+
+// Helper function to format time WhatsApp-style
+const formatWhatsAppTime = (date: Date) => {
+  if (isToday(date)) {
+    return format(date, "h:mm a");
+  } else if (isYesterday(date)) {
+    return "Yesterday";
+  } else {
+    return format(date, "dd/MM/yy");
+  }
+};
 
 export default function SupportTicketsPage() {
   const { user } = useUser();
@@ -22,6 +35,7 @@ export default function SupportTicketsPage() {
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to tickets
@@ -70,6 +84,25 @@ export default function SupportTicketsPage() {
     }
   };
 
+  const handleStatusToggle = async (checked: boolean) => {
+    if (!selectedTicket?.id) return;
+
+    const newStatus = checked ? "closed" : "open";
+
+    try {
+      setUpdatingStatus(true);
+      await supportService.updateTicketStatus(selectedTicket.id, newStatus);
+      toast.success(`Ticket ${newStatus === "closed" ? "closed" : "reopened"}`);
+
+      // Update local state
+      setSelectedTicket({ ...selectedTicket, status: newStatus });
+    } catch (error) {
+      toast.error("Failed to update ticket status");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-2rem)] overflow-hidden rounded-lg border bg-background shadow-sm">
       {/* Left Sidebar - Ticket List */}
@@ -94,7 +127,7 @@ export default function SupportTicketsPage() {
                   </span>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
                     {ticket.updatedAt
-                      ? format(new Date(ticket.updatedAt as Date), "h:mm a")
+                      ? formatWhatsAppTime(new Date(ticket.updatedAt as Date))
                       : ""}
                   </span>
                 </div>
@@ -119,19 +152,34 @@ export default function SupportTicketsPage() {
         {selectedTicket ? (
           <div className="h-full grid grid-rows-[auto_1fr_auto]">
             {/* Chat Header - Fixed */}
-            <div className="p-4 border-b bg-background flex items-center gap-3 shadow-sm">
-              <Avatar>
-                <AvatarFallback>
-                  <UserIcon className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold text-sm">
-                  Ticket #{selectedTicket.id}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  User ID: {selectedTicket.userId}
-                </p>
+            <div className="p-4 border-b bg-background flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarFallback>
+                    <UserIcon className="h-5 w-5" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold text-sm">
+                    Ticket #{selectedTicket.id}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    User ID: {selectedTicket.userId}
+                  </p>
+                </div>
+              </div>
+
+              {/* Status Toggle */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="ticket-status" className="text-sm">
+                  {selectedTicket.status === "closed" ? "Closed" : "Open"}
+                </Label>
+                <Switch
+                  id="ticket-status"
+                  checked={selectedTicket.status === "closed"}
+                  onCheckedChange={handleStatusToggle}
+                  disabled={updatingStatus}
+                />
               </div>
             </div>
 
