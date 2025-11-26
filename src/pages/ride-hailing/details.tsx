@@ -36,6 +36,7 @@ import {
   IconBuilding,
   IconClock,
   IconRoute,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
 
 export default function RideHailingDetailsPage() {
@@ -188,8 +189,8 @@ export default function RideHailingDetailsPage() {
 
       {/* Colored Status Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Status Update - Only for Courier */}
-        {isCourier && (
+        {/* Status Card - Editable for Courier, Static for Cancelled */}
+        {isCourier && order.orderStatus !== RideHaulingStatus.cancelled ? (
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
@@ -221,7 +222,23 @@ export default function RideHailingDetailsPage() {
               </Select>
             </CardContent>
           </Card>
-        )}
+        ) : order.orderStatus === RideHaulingStatus.cancelled ? (
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-red-900 dark:text-red-100">
+                Ride Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <IconAlertTriangle className="h-5 w-5 text-red-900 dark:text-red-100" />
+                <Badge variant="destructive" className="text-sm font-semibold">
+                  Cancelled
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
           <CardHeader className="pb-3">
@@ -259,6 +276,58 @@ export default function RideHailingDetailsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cancellation Reason Card - Only shown when cancelled */}
+      {order.orderStatus === RideHaulingStatus.cancelled && (
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-300 dark:border-red-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-900 dark:text-red-100">
+              <IconAlertTriangle className="h-5 w-5" />
+              Cancellation Details
+            </CardTitle>
+            <CardDescription className="text-red-800 dark:text-red-200">
+              This ride was cancelled
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                  Reason
+                </span>
+                <p className="text-sm text-red-800 dark:text-red-200 bg-white/50 dark:bg-black/20 p-3 rounded-md">
+                  {order.cancellationReason || "No reason provided"}
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {order.canclledBy && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-red-800 dark:text-red-300">
+                      Cancelled By
+                    </span>
+                    <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                      {order.canclledBy}
+                    </span>
+                  </div>
+                )}
+                {order.cancelledAt && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-red-800 dark:text-red-300">
+                      Cancelled At
+                    </span>
+                    <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                      {format(
+                        new Date(order.cancelledAt as Date),
+                        "dd-MM-yyyy HH:mm"
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Customer Info & Trip Details */}
       <div className="grid gap-4 md:grid-cols-2">
