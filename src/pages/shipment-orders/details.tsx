@@ -23,6 +23,8 @@ import {
   IconCash,
   IconWallet,
   IconArrowLeft,
+  IconFileTypePdf,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import { shipmentOrdersService } from "@/services/shipment-orders.service";
 import {
@@ -336,26 +338,66 @@ export default function ShipmentOrderDetailsPage() {
       </div>
 
       {/* Clearance Document (for Custom Clearance) */}
-      {isCustomClearance && order.clearancedocument && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Clearance Document</CardTitle>
-            <CardDescription>
-              {order.clearanceType ===
-              ShipmentCustomClearanceType.seaconsignment
-                ? "Sea Consignment Documentation"
-                : "Air Consignment Documentation"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <img
-              src={order.clearancedocument}
-              alt="Clearance Document"
-              className="rounded-lg max-w-full max-h-[500px] w-auto object-contain border"
-            />
-          </CardContent>
-        </Card>
-      )}
+      {isCustomClearance &&
+        order.clearancedocument &&
+        (() => {
+          // Helper function to check if URL is a PDF
+          const isPDF = (url: string) => {
+            return (
+              url.toLowerCase().includes(".pdf") ||
+              url.toLowerCase().includes("pdf?")
+            );
+          };
+
+          const documentIsPDF = isPDF(order.clearancedocument);
+
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle>Clearance Document</CardTitle>
+                <CardDescription>
+                  {order.clearanceType ===
+                  ShipmentCustomClearanceType.seaconsignment
+                    ? "Sea Consignment Documentation"
+                    : "Air Consignment Documentation"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {documentIsPDF ? (
+                  // PDF Display - Clickable card
+                  <a
+                    href={order.clearancedocument}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <div className="flex items-center gap-4 p-6 border-2 border-dashed rounded-lg hover:border-primary hover:bg-accent/50 transition-colors cursor-pointer group">
+                      <div className="flex-shrink-0">
+                        <IconFileTypePdf className="h-16 w-16 text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                          Clearance Document (PDF)
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Click to view document in new tab
+                        </p>
+                      </div>
+                      <IconExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </a>
+                ) : (
+                  // Image Display - Inline preview
+                  <img
+                    src={order.clearancedocument}
+                    alt="Clearance Document"
+                    className="rounded-lg max-w-full max-h-[500px] w-auto object-contain border"
+                  />
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
       {/* Locations */}
       <div className="grid gap-4 md:grid-cols-3">
