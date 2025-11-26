@@ -37,6 +37,9 @@ import {
   IconClock,
   IconRoute,
   IconAlertTriangle,
+  IconCircleCheck,
+  IconTruck,
+  IconClockHour4,
 } from "@tabler/icons-react";
 
 export default function RideHailingDetailsPage() {
@@ -189,56 +192,145 @@ export default function RideHailingDetailsPage() {
 
       {/* Colored Status Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Status Card - Editable for Courier, Static for Cancelled */}
-        {isCourier && order.orderStatus !== RideHaulingStatus.cancelled ? (
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Order Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select
-                value={order.orderStatus?.toString()}
-                onValueChange={handleStatusChange}
-                disabled={updatingStatus}
-              >
-                <SelectTrigger className="bg-white dark:bg-gray-900">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={RideHaulingStatus.completed.toString()}>
-                    Completed
-                  </SelectItem>
-                  <SelectItem value={RideHaulingStatus.cancelled.toString()}>
-                    Cancelled
-                  </SelectItem>
-                  <SelectItem
-                    value={RideHaulingStatus.courierdeliverdtopnd.toString()}
+        {/* Status Card - Editable for Courier, Static for Others */}
+        {(() => {
+          // Helper function to get status display info
+          const getStatusInfo = (status: number) => {
+            switch (status) {
+              case RideHaulingStatus.requested:
+                return {
+                  label: "Requested",
+                  icon: IconClockHour4,
+                  colorClass:
+                    "from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border-amber-200 dark:border-amber-800",
+                  textClass: "text-amber-900 dark:text-amber-100",
+                  badgeVariant: "outline" as const,
+                };
+              case RideHaulingStatus.accepted:
+                return {
+                  label: "Accepted",
+                  icon: IconCircleCheck,
+                  colorClass:
+                    "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800",
+                  textClass: "text-blue-900 dark:text-blue-100",
+                  badgeVariant: "default" as const,
+                };
+              case RideHaulingStatus.onroute:
+                return {
+                  label: "On Route",
+                  icon: IconTruck,
+                  colorClass:
+                    "from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 border-indigo-200 dark:border-indigo-800",
+                  textClass: "text-indigo-900 dark:text-indigo-100",
+                  badgeVariant: "default" as const,
+                };
+              case RideHaulingStatus.completed:
+                return {
+                  label: "Completed",
+                  icon: IconCircleCheck,
+                  colorClass:
+                    "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800",
+                  textClass: "text-green-900 dark:text-green-100",
+                  badgeVariant: "default" as const,
+                };
+              case RideHaulingStatus.cancelled:
+                return {
+                  label: "Cancelled",
+                  icon: IconAlertTriangle,
+                  colorClass:
+                    "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800",
+                  textClass: "text-red-900 dark:text-red-100",
+                  badgeVariant: "destructive" as const,
+                };
+              case RideHaulingStatus.expired:
+                return {
+                  label: "Expired",
+                  icon: IconAlertTriangle,
+                  colorClass:
+                    "from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 border-gray-200 dark:border-gray-800",
+                  textClass: "text-gray-900 dark:text-gray-100",
+                  badgeVariant: "outline" as const,
+                };
+              default:
+                return {
+                  label: "Unknown",
+                  icon: IconAlertTriangle,
+                  colorClass:
+                    "from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 border-gray-200 dark:border-gray-800",
+                  textClass: "text-gray-900 dark:text-gray-100",
+                  badgeVariant: "secondary" as const,
+                };
+            }
+          };
+
+          // Show editable dropdown for courier orders (not cancelled)
+          if (isCourier && order.orderStatus !== RideHaulingStatus.cancelled) {
+            return (
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    Order Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Select
+                    value={order.orderStatus?.toString()}
+                    onValueChange={handleStatusChange}
+                    disabled={updatingStatus}
                   >
-                    Delivered to PnD
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-        ) : order.orderStatus === RideHaulingStatus.cancelled ? (
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-red-900 dark:text-red-100">
-                Ride Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <IconAlertTriangle className="h-5 w-5 text-red-900 dark:text-red-100" />
-                <Badge variant="destructive" className="text-sm font-semibold">
-                  Cancelled
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
+                    <SelectTrigger className="bg-white dark:bg-gray-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        value={RideHaulingStatus.completed.toString()}
+                      >
+                        Completed
+                      </SelectItem>
+                      <SelectItem
+                        value={RideHaulingStatus.cancelled.toString()}
+                      >
+                        Cancelled
+                      </SelectItem>
+                      <SelectItem
+                        value={RideHaulingStatus.courierdeliverdtopnd.toString()}
+                      >
+                        Delivered to PnD
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // Show static status card for all other cases
+          const statusInfo = getStatusInfo(order.orderStatus || 0);
+          const StatusIcon = statusInfo.icon;
+
+          return (
+            <Card className={`bg-gradient-to-br ${statusInfo.colorClass}`}>
+              <CardHeader className="pb-3">
+                <CardTitle
+                  className={`text-sm font-medium ${statusInfo.textClass}`}
+                >
+                  Ride Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <StatusIcon className={`h-5 w-5 ${statusInfo.textClass}`} />
+                  <Badge
+                    variant={statusInfo.badgeVariant}
+                    className="text-sm font-semibold"
+                  >
+                    {statusInfo.label}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
           <CardHeader className="pb-3">
