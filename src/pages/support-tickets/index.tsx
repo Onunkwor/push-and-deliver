@@ -139,13 +139,13 @@ export default function SupportTicketsPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] overflow-hidden rounded-lg border bg-background shadow-sm">
+    <div className="flex h-[85vh] overflow-hidden rounded-lg border bg-background shadow-sm">
       {/* Left Sidebar - Ticket List */}
       <div className="w-1/3 border-r flex flex-col min-w-[300px]">
         <div className="p-4 border-b bg-muted/30">
           <h2 className="font-semibold text-lg">Support Tickets</h2>
         </div>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 overflow-y-auto">
           <div className="flex flex-col">
             {tickets.map((ticket) => (
               <button
@@ -177,7 +177,7 @@ export default function SupportTicketsPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between w-full mt-1">
-                  <span className="text-sm truncate text-foreground/90 font-medium w-full">
+                  <span className="text-sm truncate text-foreground/90 font-medium w-1/3 truncate">
                     {ticket.lastMessage || "No messages"}
                   </span>
                 </div>
