@@ -29,7 +29,11 @@ function Router() {
           path="/sign-in/*"
           element={
             <div className="flex items-center justify-center min-h-screen">
-              <SignIn routing="path" path="/sign-in" />
+              <SignIn
+                routing="path"
+                path="/sign-in"
+                fallbackRedirectUrl="/dashboard"
+              />
             </div>
           }
         />
