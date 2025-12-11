@@ -56,6 +56,11 @@ const data = {
       icon: IconCoin,
     },
     {
+      title: "Export Rates",
+      url: "/export-rates",
+      icon: IconPlane,
+    },
+    {
       title: "Referrals",
       url: "/referrals",
       icon: IconGift,

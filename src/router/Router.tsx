@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout";
 import CouponsPage from "@/pages/coupons";
 import DashboardPage from "@/pages/dashboard";
 import FeesPage from "@/pages/fees";
+import ExportRatesPage from "@/pages/export-rates";
 import ReferralsPage from "@/pages/referrals";
 import RestaurantOrdersPage from "@/pages/restaurant-orders";
 import RestaurantOrderDetailsPage from "@/pages/restaurant-orders/details";
@@ -61,6 +62,7 @@ function Router() {
                   <Route path="/vendors" element={<VendorsPage />} />
                   <Route path="/vendors/:id" element={<VendorDetailsPage />} />
                   <Route path="/fees" element={<FeesPage />} />
+                  <Route path="/export-rates" element={<ExportRatesPage />} />
                   <Route path="/referrals" element={<ReferralsPage />} />
                   <Route path="/withdrawals" element={<WithdrawalsPage />} />
                   <Route path="/coupons" element={<CouponsPage />} />
