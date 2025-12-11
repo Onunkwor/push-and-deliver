@@ -290,7 +290,12 @@ export default function ShipmentOrdersPage() {
               {/* Shipment Type Filter */}
               <Select
                 value={shipmentTypeFilter}
-                onValueChange={setShipmentTypeFilter}
+                onValueChange={(value) => {
+                  setShipmentTypeFilter(value);
+                  if (value !== "0") {
+                    setClearanceTypeFilter("all");
+                  }
+                }}
               >
                 <SelectTrigger className="w-[180px]">
                   <IconFilter className="h-4 w-4 mr-2" />
