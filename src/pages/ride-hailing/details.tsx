@@ -268,46 +268,7 @@ export default function RideHailingDetailsPage() {
             }
           };
 
-          // Show editable dropdown for courier orders (not cancelled)
-          if (isCourier && order.orderStatus !== RideHaulingStatus.cancelled) {
-            return (
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    Order Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Select
-                    value={order.orderStatus?.toString()}
-                    onValueChange={handleStatusChange}
-                    disabled={updatingStatus || isViewOnly}
-                  >
-                    <SelectTrigger className="bg-white dark:bg-gray-900">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem
-                        value={RideHaulingStatus.completed.toString()}
-                      >
-                        Completed
-                      </SelectItem>
-                      <SelectItem
-                        value={RideHaulingStatus.cancelled.toString()}
-                      >
-                        Cancelled
-                      </SelectItem>
-                      <SelectItem
-                        value={RideHaulingStatus.courierdeliverdtopnd.toString()}
-                      >
-                        Delivered to PnD
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </CardContent>
-              </Card>
-            );
-          }
+          // Show static status card for all cases (View Only as requested)
 
           // Show static status card for all other cases
           const statusInfo = getStatusInfo(order.orderStatus || 0);

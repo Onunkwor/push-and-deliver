@@ -195,33 +195,38 @@ export default function ShipmentOrderDetailsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Select
-              value={order.orderStatus?.toString()}
-              onValueChange={handleStatusChange}
-              disabled={updatingStatus || isViewOnly}
-            >
-              <SelectTrigger className="bg-white dark:bg-gray-900">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ShipmentOrderStatus.sentToHq.toString()}>
-                  Sent to HQ
-                </SelectItem>
-                <SelectItem
-                  value={ShipmentOrderStatus.onrouteToDestination.toString()}
-                >
-                  On Route to Destination
-                </SelectItem>
-                <SelectItem
-                  value={ShipmentOrderStatus.deliveredToDestination.toString()}
-                >
-                  Delivered to Destination
-                </SelectItem>
-                <SelectItem value={ShipmentOrderStatus.cancelled.toString()}>
-                  Cancelled
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            {isCustomClearance ? (
+              <Select
+                value={order.orderStatus?.toString()}
+                onValueChange={handleStatusChange}
+                disabled={updatingStatus || isViewOnly}
+              >
+                <SelectTrigger className="bg-white dark:bg-gray-900">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value={ShipmentOrderStatus.deliveredToDestination.toString()}
+                  >
+                    Delivered to Destination
+                  </SelectItem>
+                  <SelectItem value={ShipmentOrderStatus.cancelled.toString()}>
+                    Cancelled
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Badge variant="default" className="text-sm font-semibold">
+                  {Object.keys(ShipmentOrderStatus).find(
+                    (key) =>
+                      ShipmentOrderStatus[
+                        key as keyof typeof ShipmentOrderStatus
+                      ] === order.orderStatus
+                  ) || "Unknown"}
+                </Badge>
+              </div>
+            )}
           </CardContent>
         </Card>
 
