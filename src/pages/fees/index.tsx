@@ -1,10 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -12,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -20,58 +26,61 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { feesService } from '@/services/fees.service'
-import type { Fee } from '@/types'
-import { FeeType } from '@/types'
-import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
+} from "@/components/ui/dialog";
+import { feesService } from "@/services/fees.service";
+import type { Fee } from "@/types";
+import { FeeType } from "@/types";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatAmount = (amount: number) => {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 const getFeeTypeName = (feeType?: FeeType) => {
-  if (feeType === FeeType.fooddeliveryfee) return 'Food Delivery'
-  if (feeType === FeeType.servicefee) return 'Service Fee'
-  if (feeType === FeeType.ridehauling) return 'Ride Hauling'
-  return 'Unknown'
-}
+  if (feeType === FeeType.fooddeliveryfee) return "Food Delivery";
+  if (feeType === FeeType.servicefee) return "Service Fee";
+  if (feeType === FeeType.ridehauling) return "Ride Hauling";
+  return "Unknown";
+};
 
 export default function FeesPage() {
-  const [fees, setFees] = useState<Fee[]>([])
-  const [loading, setLoading] = useState(true)
-  const [editingFee, setEditingFee] = useState<Fee | null>(null)
+  const [fees, setFees] = useState<Fee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingFee, setEditingFee] = useState<Fee | null>(null);
   const [editValues, setEditValues] = useState({
-    bookingFee: '',
-    perKm: '',
-    perMin: '',
-    perWeight: '',
-    minFare: '',
-    surgeMultiplier: '',
-    addedSurge: '',
-    value: '',
-  })
+    bookingFee: "",
+    perKm: "",
+    perMin: "",
+    perWeight: "",
+    minFare: "",
+    surgeMultiplier: "",
+    addedSurge: "",
+    value: "",
+  });
 
   useEffect(() => {
-    loadFees()
-  }, [])
+    loadFees();
+  }, []);
 
   const loadFees = async () => {
     try {
-      setLoading(true)
-      const data = await feesService.getAllFees()
-      setFees(data)
+      setLoading(true);
+      const data = await feesService.getAllFees();
+      setFees(data);
     } catch (error) {
-      console.error('Error loading fees:', error)
-      toast.error('Failed to load fees')
+      console.error("Error loading fees:", error);
+      toast.error("Failed to load fees");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEditClick = (fee: Fee) => {
-    setEditingFee(fee)
+    setEditingFee(fee);
     setEditValues({
       bookingFee: (fee.bookingFee || 0).toString(),
       perKm: (fee.perKm || 0).toString(),
@@ -81,11 +90,11 @@ export default function FeesPage() {
       surgeMultiplier: (fee.surgeMultiplier || 0).toString(),
       addedSurge: (fee.addedSurge || 0).toString(),
       value: (fee.value || 0).toString(),
-    })
-  }
+    });
+  };
 
   const handleUpdateFee = async () => {
-    if (!editingFee?.id) return
+    if (!editingFee?.id) return;
 
     try {
       const updates = {
@@ -97,23 +106,27 @@ export default function FeesPage() {
         surgeMultiplier: parseFloat(editValues.surgeMultiplier) || 0,
         addedSurge: parseFloat(editValues.addedSurge) || 0,
         value: parseFloat(editValues.value) || 0,
-      }
+      };
 
-      await feesService.updateFee(editingFee.id, updates)
-      toast.success('Fee updated successfully')
-      await loadFees()
-      setEditingFee(null)
+      await feesService.updateFee(editingFee.id, updates);
+      toast.success("Fee updated successfully");
+      await loadFees();
+      setEditingFee(null);
     } catch (error) {
-      console.error('Error updating fee:', error)
-      toast.error('Failed to update fee')
+      console.error("Error updating fee:", error);
+      toast.error("Failed to update fee");
     }
-  }
+  };
 
-  const totalFees = fees.length
-  const totalBookingFees = fees.reduce((sum, f) => sum + (f.bookingFee || 0), 0)
-  const avgPerKm = fees.length > 0
-    ? fees.reduce((sum, f) => sum + (f.perKm || 0), 0) / fees.length
-    : 0
+  const totalFees = fees.length;
+  const totalBookingFees = fees.reduce(
+    (sum, f) => sum + (f.bookingFee || 0),
+    0
+  );
+  const avgPerKm =
+    fees.length > 0
+      ? fees.reduce((sum, f) => sum + (f.perKm || 0), 0) / fees.length
+      : 0;
 
   if (loading) {
     return (
@@ -135,7 +148,7 @@ export default function FeesPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -177,9 +190,7 @@ export default function FeesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ₦{formatAmount(avgPerKm)}
-            </div>
+            <div className="text-2xl font-bold">₦{formatAmount(avgPerKm)}</div>
           </CardContent>
         </Card>
       </div>
@@ -195,7 +206,6 @@ export default function FeesPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead>Fee Type</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Booking Fee</TableHead>
                   <TableHead>Per Km</TableHead>
@@ -211,15 +221,19 @@ export default function FeesPage() {
               <TableBody>
                 {fees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                    <TableCell
+                      colSpan={11}
+                      className="text-center text-muted-foreground py-8"
+                    >
                       No fees found
                     </TableCell>
                   </TableRow>
                 ) : (
                   fees.map((fee) => (
                     <TableRow key={fee.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{getFeeTypeName(fee.feeType)}</TableCell>
-                      <TableCell className="text-sm">{fee.name || 'N/A'}</TableCell>
+                      <TableCell className="text-sm">
+                        {fee.name || "N/A"}
+                      </TableCell>
                       <TableCell className="font-medium">
                         ₦{formatAmount(fee.bookingFee || 0)}
                       </TableCell>
@@ -245,7 +259,10 @@ export default function FeesPage() {
                         ₦{formatAmount(fee.value || 0)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog open={editingFee?.id === fee.id} onOpenChange={(open) => !open && setEditingFee(null)}>
+                        <Dialog
+                          open={editingFee?.id === fee.id}
+                          onOpenChange={(open) => !open && setEditingFee(null)}
+                        >
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
@@ -257,7 +274,9 @@ export default function FeesPage() {
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Update {getFeeTypeName(fee.feeType)} Fee</DialogTitle>
+                              <DialogTitle>
+                                Update {getFeeTypeName(fee.feeType)} Fee
+                              </DialogTitle>
                               <DialogDescription>
                                 Update fee values for this fee type
                               </DialogDescription>
@@ -265,12 +284,19 @@ export default function FeesPage() {
                             <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <Label htmlFor="bookingFee">Booking Fee (₦)</Label>
+                                  <Label htmlFor="bookingFee">
+                                    Booking Fee (₦)
+                                  </Label>
                                   <Input
                                     id="bookingFee"
                                     type="number"
                                     value={editValues.bookingFee}
-                                    onChange={(e) => setEditValues({ ...editValues, bookingFee: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        bookingFee: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter booking fee"
                                     step="0.01"
                                     min="0"
@@ -283,7 +309,12 @@ export default function FeesPage() {
                                     id="perKm"
                                     type="number"
                                     value={editValues.perKm}
-                                    onChange={(e) => setEditValues({ ...editValues, perKm: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        perKm: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter per km rate"
                                     step="0.01"
                                     min="0"
@@ -291,12 +322,19 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="perMin">Per Minute Rate (₦)</Label>
+                                  <Label htmlFor="perMin">
+                                    Per Minute Rate (₦)
+                                  </Label>
                                   <Input
                                     id="perMin"
                                     type="number"
                                     value={editValues.perMin}
-                                    onChange={(e) => setEditValues({ ...editValues, perMin: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        perMin: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter per minute rate"
                                     step="0.01"
                                     min="0"
@@ -304,12 +342,19 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="perWeight">Per Weight Rate (₦)</Label>
+                                  <Label htmlFor="perWeight">
+                                    Per Weight Rate (₦)
+                                  </Label>
                                   <Input
                                     id="perWeight"
                                     type="number"
                                     value={editValues.perWeight}
-                                    onChange={(e) => setEditValues({ ...editValues, perWeight: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        perWeight: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter per weight rate"
                                     step="0.01"
                                     min="0"
@@ -317,12 +362,19 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="minFare">Minimum Fare (₦)</Label>
+                                  <Label htmlFor="minFare">
+                                    Minimum Fare (₦)
+                                  </Label>
                                   <Input
                                     id="minFare"
                                     type="number"
                                     value={editValues.minFare}
-                                    onChange={(e) => setEditValues({ ...editValues, minFare: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        minFare: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter minimum fare"
                                     step="0.01"
                                     min="0"
@@ -330,12 +382,19 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="surgeMultiplier">Surge Multiplier</Label>
+                                  <Label htmlFor="surgeMultiplier">
+                                    Surge Multiplier
+                                  </Label>
                                   <Input
                                     id="surgeMultiplier"
                                     type="number"
                                     value={editValues.surgeMultiplier}
-                                    onChange={(e) => setEditValues({ ...editValues, surgeMultiplier: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        surgeMultiplier: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter surge multiplier"
                                     step="0.1"
                                     min="0"
@@ -343,12 +402,19 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="addedSurge">Added Surge</Label>
+                                  <Label htmlFor="addedSurge">
+                                    Added Surge
+                                  </Label>
                                   <Input
                                     id="addedSurge"
                                     type="number"
                                     value={editValues.addedSurge}
-                                    onChange={(e) => setEditValues({ ...editValues, addedSurge: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        addedSurge: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter added surge"
                                     step="0.1"
                                     min="0"
@@ -361,7 +427,12 @@ export default function FeesPage() {
                                     id="value"
                                     type="number"
                                     value={editValues.value}
-                                    onChange={(e) => setEditValues({ ...editValues, value: e.target.value })}
+                                    onChange={(e) =>
+                                      setEditValues({
+                                        ...editValues,
+                                        value: e.target.value,
+                                      })
+                                    }
                                     placeholder="Enter value"
                                     step="0.01"
                                     min="0"
@@ -388,5 +459,5 @@ export default function FeesPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

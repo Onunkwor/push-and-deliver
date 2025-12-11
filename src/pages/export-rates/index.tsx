@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,16 +9,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { exportRatesService } from "@/services/export-rates.service";
 import type { DHLExportRate } from "@/types";
 import { toast } from "sonner";
 import { LoadingModal } from "@/components/shared/Loader";
+import { EditRateModal } from "./EditRateModal";
+import { IconPencil } from "@tabler/icons-react";
 
 export default function ExportRatesPage() {
   const [rates, setRates] = useState<DHLExportRate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [selectedRate, setSelectedRate] = useState<DHLExportRate | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadRates();
@@ -30,7 +37,6 @@ export default function ExportRatesPage() {
       setLoading(true);
       const data = await exportRatesService.getExportRates();
       setRates(data);
-      setHasChanges(false);
     } catch (error) {
       console.error("Error loading rates:", error);
       toast.error("Failed to load export rates");
@@ -39,38 +45,31 @@ export default function ExportRatesPage() {
     }
   };
 
-  const handleRateChange = (
-    index: number,
-    field: keyof DHLExportRate,
-    value: string
-  ) => {
-    const newRates = [...rates];
-    // Allow empty string for better typing experience, but convert to 0 or keep as is if needed
-    // However, the type is number. So we might need to handle it carefully.
-    // For now, let's parse float.
-    const numValue = parseFloat(value);
-
-    if (!isNaN(numValue) || value === "") {
-      newRates[index] = {
-        ...newRates[index],
-        [field]: value === "" ? 0 : numValue,
-      };
-      setRates(newRates);
-      setHasChanges(true);
-    }
+  const handleEdit = (rate: DHLExportRate) => {
+    setSelectedRate(rate);
+    setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleModalSave = async (updatedRate: DHLExportRate) => {
     try {
-      setSaving(true);
-      await exportRatesService.updateExportRates(rates);
-      toast.success("Export rates updated successfully");
-      setHasChanges(false);
+      // 1. Update the local state first to reflect changes immediately
+      const newRates = rates.map((r) =>
+        r.weight === updatedRate.weight ? updatedRate : r
+      );
+      setRates(newRates);
+
+      // 2. Persist to backend
+      // Note: We are updating the entire list because the service expects that.
+      await exportRatesService.updateExportRates(newRates);
+
+      toast.success("Rate updated successfully");
+      setIsModalOpen(false);
     } catch (error) {
-      console.error("Error updating rates:", error);
-      toast.error("Failed to update export rates");
-    } finally {
-      setSaving(false);
+      console.error("Error saving rate:", error);
+      toast.error("Failed to update rate");
+      // Revert local state if needed (could reload from server)
+      // loadRates();
+      throw error;
     }
   };
 
@@ -82,9 +81,6 @@ export default function ExportRatesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Export Rates</h1>
-        <Button onClick={handleSave} disabled={!hasChanges || saving}>
-          {saving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
 
       <Card>
@@ -97,38 +93,50 @@ export default function ExportRatesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px]">Weight (kg)</TableHead>
-                  <TableHead>Zone 1</TableHead>
-                  <TableHead>Zone 2</TableHead>
-                  <TableHead>Zone 3</TableHead>
-                  <TableHead>Zone 4</TableHead>
-                  <TableHead>Zone 5</TableHead>
-                  <TableHead>Zone 6</TableHead>
-                  <TableHead>Zone 7</TableHead>
-                  <TableHead>Zone 8</TableHead>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((zone) => (
+                    <TableHead key={zone} className="whitespace-nowrap">
+                      Zone {zone}
+                    </TableHead>
+                  ))}
+                  <TableHead className="w-[50px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rates.map((rate, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{rate.weight}</TableCell>
+                  <TableRow
+                    key={index}
+                    className="group cursor-default hover:bg-muted/40"
+                  >
+                    <TableCell className="font-medium bg-muted/30">
+                      {rate.weight}
+                    </TableCell>
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((zoneNum) => {
                       const zoneKey = `zone${zoneNum}` as keyof DHLExportRate;
                       return (
                         <TableCell key={zoneKey}>
-                          <Input
-                            type="number"
-                            value={rate[zoneKey]}
-                            onChange={(e) =>
-                              handleRateChange(index, zoneKey, e.target.value)
-                            }
-                            className="w-full min-w-[100px]"
-                          />
-                          <div className="text-xs text-muted-foreground mt-1">
-                            ₦{rate[zoneKey]?.toLocaleString()}
-                          </div>
+                          ₦{rate[zoneKey]?.toLocaleString() ?? 0}
                         </TableCell>
                       );
                     })}
+                    <TableCell className="text-right">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+                              onClick={() => handleEdit(rate)}
+                            >
+                              <IconPencil size={16} />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Edit Rates</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -136,6 +144,13 @@ export default function ExportRatesPage() {
           </div>
         </CardContent>
       </Card>
+
+      <EditRateModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        rate={selectedRate}
+        onSave={handleModalSave}
+      />
     </div>
   );
 }
