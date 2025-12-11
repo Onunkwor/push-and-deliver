@@ -1,26 +1,26 @@
-import React from "react";
-import { useAuth } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
 import { LoadingModal } from "@/components/shared/Loader";
-import { useCurrentUser } from "@/contexts/UserContext";
 import Unauthorized from "@/components/Unauthorized";
+import { useCurrentUser } from "@/contexts/UserContext";
+import React from "react";
+import { Navigate } from "react-router-dom";
 
 const ProtectedRoutes = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user, loading: userLoading, isAdmin } = useCurrentUser();
-  const navigate = useNavigate();
+  const { user, loading, isAdmin } = useCurrentUser();
 
-  if (!isLoaded || userLoading) {
+  if (loading) {
     return <LoadingModal />;
   }
 
-  if (!isSignedIn) {
-    navigate("/sign-in", { replace: true });
-    return null;
+  if (!user) {
+    return <Navigate to="/sign-in" replace />;
   }
 
-  // Check if user is admin
-  if (user && !isAdmin) {
+  // Check if user is admin - assuming we still want this check since it was here before.
+  // If the user meant to remove this check for some roles, they would have said so,
+  // but they said "make it more than easy to work with the adminType as needed".
+  // The existing code checked `isAdmin`. The user data has `isAdmin: true`.
+  // If a user is not admin, they get Unauthorized.
+  if (!isAdmin) {
     return <Unauthorized />;
   }
 

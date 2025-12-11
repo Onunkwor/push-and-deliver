@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 export function NavMain({
   items,
@@ -34,32 +35,36 @@ export function NavMain({
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const location = useLocation();
+  const { user } = useCurrentUser();
+  const adminType = user?.adminType || "customercare";
 
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <SidebarMenuButton
-                  tooltip="Create Coupon"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-                >
-                  <IconCirclePlusFilled />
-                  <span>Create Coupon</span>
-                </SidebarMenuButton>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Coupon</DialogTitle>
-                  <DialogDescription>
-                    Fill in the details below to create a new coupon.
-                  </DialogDescription>
-                </DialogHeader>
-                <CouponForm onSuccess={() => setIsDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
+            {adminType !== "customercare" && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip="Create Coupon"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+                  >
+                    <IconCirclePlusFilled />
+                    <span>Create Coupon</span>
+                  </SidebarMenuButton>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Coupon</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details below to create a new coupon.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <CouponForm onSuccess={() => setIsDialogOpen(false)} />
+                </DialogContent>
+              </Dialog>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>

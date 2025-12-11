@@ -13,7 +13,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { Send, User as UserIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useUser } from "@clerk/clerk-react";
+import { useCurrentUser } from "@/contexts/UserContext";
 import {
   Tooltip,
   TooltipContent,
@@ -33,7 +33,7 @@ const formatWhatsAppTime = (date: Date) => {
 };
 
 export default function SupportTicketsPage() {
-  const { user } = useUser();
+  const { user } = useCurrentUser();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
     null
@@ -80,7 +80,7 @@ export default function SupportTicketsPage() {
       setSending(true);
       await supportService.sendSupportMessage(
         selectedTicket.id,
-        user.id.split("_")[1],
+        user.id,
         newMessage
       );
       setNewMessage("");
@@ -114,7 +114,7 @@ export default function SupportTicketsPage() {
 
         await supportService.sendSupportMessage(
           selectedTicket.id,
-          user.id.split("_")[1],
+          user.id,
           closingMessage
         );
 

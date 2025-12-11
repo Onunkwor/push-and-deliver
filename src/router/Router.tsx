@@ -18,83 +18,84 @@ import UserDetailsPage from "@/pages/users/details";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailsPage from "@/pages/vendors/details";
 import WithdrawalsPage from "@/pages/withdrawals";
-import { SignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
+import SignInPage from "@/pages/auth/sign-in";
+import SignUpPage from "@/pages/auth/sign-up";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import ProtectedRoutes from "./ProtectedRoutes";
+
+import PublicRoute from "./PublicRoute";
 
 function Router() {
   return (
     <BrowserRouter>
       <Routes>
         <Route
-          path="/sign-in/*"
+          path="/sign-in"
           element={
-            <div className="flex items-center justify-center min-h-screen">
-              <SignIn
-                routing="path"
-                path="/sign-in"
-                fallbackRedirectUrl="/dashboard"
-              />
-            </div>
+            <PublicRoute>
+              <SignInPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/sign-up"
+          element={
+            <PublicRoute>
+              <SignUpPage />
+            </PublicRoute>
           }
         />
 
         <Route
           path="/*"
           element={
-            <>
-              <SignedIn>
-                <Layout>
-                  <Routes>
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route
-                      path="/admin/users"
-                      element={<UserManagementPage />}
-                    />
-                    <Route path="/users" element={<UsersPage />} />
-                    <Route path="/users/:id" element={<UserDetailsPage />} />
-                    <Route path="/riders" element={<RidersPage />} />
-                    <Route path="/riders/:id" element={<RiderDetailsPage />} />
-                    <Route path="/vendors" element={<VendorsPage />} />
-                    <Route
-                      path="/vendors/:id"
-                      element={<VendorDetailsPage />}
-                    />
-                    <Route path="/fees" element={<FeesPage />} />
-                    <Route path="/referrals" element={<ReferralsPage />} />
-                    <Route path="/withdrawals" element={<WithdrawalsPage />} />
-                    <Route path="/coupons" element={<CouponsPage />} />
-                    <Route
-                      path="/support-tickets"
-                      element={<SupportTicketsPage />}
-                    />
-                    <Route
-                      path="/restaurant-orders"
-                      element={<RestaurantOrdersPage />}
-                    />
-                    <Route
-                      path="/restaurant-orders/:id"
-                      element={<RestaurantOrderDetailsPage />}
-                    />
-                    <Route
-                      path="/shipment-orders"
-                      element={<ShipmentOrdersPage />}
-                    />
-                    <Route
-                      path="/shipment-orders/:id"
-                      element={<ShipmentOrderDetailsPage />}
-                    />
-                    <Route path="/ride-hailing" element={<RideHailingPage />} />
-                    <Route
-                      path="/ride-hailing/:id"
-                      element={<RideHailingDetailsPage />}
-                    />
-                  </Routes>
-                </Layout>
-              </SignedIn>
-              <SignedOut>
-                <Navigate to="/sign-in" replace />
-              </SignedOut>
-            </>
+            <ProtectedRoutes>
+              <Layout>
+                <Routes>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/admin/users" element={<UserManagementPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users/:id" element={<UserDetailsPage />} />
+                  <Route path="/riders" element={<RidersPage />} />
+                  <Route path="/riders/:id" element={<RiderDetailsPage />} />
+                  <Route path="/vendors" element={<VendorsPage />} />
+                  <Route path="/vendors/:id" element={<VendorDetailsPage />} />
+                  <Route path="/fees" element={<FeesPage />} />
+                  <Route path="/referrals" element={<ReferralsPage />} />
+                  <Route path="/withdrawals" element={<WithdrawalsPage />} />
+                  <Route path="/coupons" element={<CouponsPage />} />
+                  <Route
+                    path="/support-tickets"
+                    element={<SupportTicketsPage />}
+                  />
+                  <Route
+                    path="/restaurant-orders"
+                    element={<RestaurantOrdersPage />}
+                  />
+                  <Route
+                    path="/restaurant-orders/:id"
+                    element={<RestaurantOrderDetailsPage />}
+                  />
+                  <Route
+                    path="/shipment-orders"
+                    element={<ShipmentOrdersPage />}
+                  />
+                  <Route
+                    path="/shipment-orders/:id"
+                    element={<ShipmentOrderDetailsPage />}
+                  />
+                  <Route path="/ride-hailing" element={<RideHailingPage />} />
+                  <Route
+                    path="/ride-hailing/:id"
+                    element={<RideHailingDetailsPage />}
+                  />
+                  <Route
+                    path="*"
+                    element={<Navigate to="/dashboard" replace />}
+                  />
+                </Routes>
+              </Layout>
+            </ProtectedRoutes>
           }
         />
       </Routes>

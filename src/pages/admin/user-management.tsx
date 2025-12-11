@@ -28,7 +28,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { IconTrash, IconSearch } from "@tabler/icons-react";
+import {
+  IconTrash,
+  IconSearch,
+  IconUserCircle,
+  IconChevronLeft,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import { useCurrentUser } from "@/contexts/UserContext";
 import { Navigate } from "react-router-dom";
@@ -41,9 +47,18 @@ export default function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   useEffect(() => {
     loadUsers();
   }, []);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const loadUsers = async () => {
     try {
@@ -112,6 +127,14 @@ export default function UserManagementPage() {
       u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const paginatedUsers = filteredUsers.slice(
+    startIndex,
+    startIndex + rowsPerPage
+  );
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -129,143 +152,206 @@ export default function UserManagementPage() {
         />
       </div>
 
-      <div className="border rounded-md bg-white dark:bg-zinc-950">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Current Role</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-6 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-48" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-24" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : filteredUsers.length === 0 ? (
+      <div className="space-y-4">
+        <div className="border rounded-md bg-white dark:bg-zinc-950">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center text-muted-foreground py-8"
-                >
-                  No users found
-                </TableCell>
+                <TableHead className="pl-12">User</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Current Role</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {user.imageURL && (
-                        <img
-                          src={user.imageURL}
-                          alt=""
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      )}
-                      <span>{user.username || "No Name"}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.isAdmin ? (
-                      <Badge
-                        variant={
-                          user.adminType === "super" ? "default" : "secondary"
-                        }
-                      >
-                        {user.adminType?.toUpperCase() || "ADMIN"}
-                      </Badge>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">
-                        User
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Select
-                        defaultValue={user.isAdmin ? user.adminType : "user"}
-                        onValueChange={(val) => updateUserRole(user.id!, val)}
-                        disabled={user.id === currentUser.id} // Prevent changing own role potentially
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">
-                            User (No Admin Access)
-                          </SelectItem>
-                          <SelectItem value="super">Super Admin</SelectItem>
-                          <SelectItem value="regular">Regular Admin</SelectItem>
-                          <SelectItem value="customercare">
-                            Customer Care
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Dialog
-                        open={userToDelete === user.id}
-                        onOpenChange={(open) => !open && setUserToDelete(null)}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => setUserToDelete(user.id!)}
-                            disabled={user.id === currentUser.id}
-                          >
-                            <IconTrash className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Delete User?</DialogTitle>
-                            <DialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete the user account for{" "}
-                              <strong>{user.email}</strong>.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setUserToDelete(null)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onClick={handleDeleteUser}
-                            >
-                              Delete
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton className="h-6 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-48" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-24" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : paginatedUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-center text-muted-foreground py-8"
+                  >
+                    No users found
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                paginatedUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {user?.imageURL ? (
+                          <img
+                            src={user.imageURL}
+                            alt=""
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <IconUserCircle className="size-8 text-neutral-300" />
+                        )}
+                        <span>{user.username || "No Name"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {user.isAdmin ? (
+                        <Badge
+                          variant={
+                            user.adminType === "super" ? "default" : "secondary"
+                          }
+                        >
+                          {user.adminType?.toUpperCase() || "ADMIN"}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">
+                          User
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          defaultValue={user.isAdmin ? user.adminType : "user"}
+                          onValueChange={(val) => updateUserRole(user.id!, val)}
+                          disabled={user.id === currentUser.id} // Prevent changing own role potentially
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select Role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">
+                              User (No Admin Access)
+                            </SelectItem>
+                            <SelectItem value="super">Super Admin</SelectItem>
+                            <SelectItem value="regular">
+                              Regular Admin
+                            </SelectItem>
+                            <SelectItem value="customercare">
+                              Customer Care
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Dialog
+                          open={userToDelete === user.id}
+                          onOpenChange={(open) =>
+                            !open && setUserToDelete(null)
+                          }
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => setUserToDelete(user.id!)}
+                              disabled={user.id === currentUser.id}
+                            >
+                              <IconTrash className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Delete User?</DialogTitle>
+                              <DialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete the user account for{" "}
+                                <strong>{user.email}</strong>.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => setUserToDelete(null)}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={handleDeleteUser}
+                              >
+                                Delete
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Rows per page
+            </p>
+            <Select
+              value={`${rowsPerPage}`}
+              onValueChange={(value) => {
+                setRowsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={rowsPerPage} />
+              </SelectTrigger>
+              <SelectContent side="top">
+                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={`${pageSize}`}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <div className="flex w-[100px] items-center justify-center text-sm font-medium text-muted-foreground">
+              Page {currentPage} of {Math.max(totalPages, 1)}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                className="h-8 w-8 p-0"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <span className="sr-only">Go to previous page</span>
+                <IconChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                className="h-8 w-8 p-0"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
+                <span className="sr-only">Go to next page</span>
+                <IconChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

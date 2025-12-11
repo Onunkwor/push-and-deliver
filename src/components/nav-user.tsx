@@ -1,8 +1,9 @@
-import { useClerk } from "@clerk/clerk-react";
 import { IconLogout } from "@tabler/icons-react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useNavigate } from "react-router-dom";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -26,10 +27,15 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
-  const { signOut } = useClerk();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await signOut();
+    try {
+      await signOut(auth);
+      navigate("/sign-in");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
@@ -50,9 +56,9 @@ export function NavUser({
             </span>
           </div>
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger asChild>
               <Button variant={"ghost"} size={"icon"} onClick={handleLogout}>
-                <IconLogout />
+                <IconLogout className="size-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

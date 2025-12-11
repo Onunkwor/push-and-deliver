@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useUser } from "@clerk/clerk-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { usersService } from "@/services/users.service";
 import type { User } from "@/types";
 
@@ -17,42 +18,47 @@ const UserContext = createContext<UserContextType>({
 });
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUser() {
-      if (!isClerkLoaded) return;
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Fetch user details from Firestore using uid
+          const firestoreUser = await usersService.getUserById(
+            firebaseUser.uid
+          );
 
-      if (!clerkUser?.primaryEmailAddress?.emailAddress) {
-        setLoading(false);
+          if (firestoreUser) {
+            setUser(firestoreUser);
+          } else {
+            // Fallback if user document doesn't exist yet (should exist from signup/login logic)
+            console.warn(
+              "User authenticated but no Firestore document found for ID:",
+              firebaseUser.uid
+            );
+            // Optionally you could set a minimal user object here or set null
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Failed to load user profile:", error);
+          setUser(null);
+        }
+      } else {
         setUser(null);
-        return;
       }
+      setLoading(false);
+    });
 
-      try {
-        const firestoreUser = await usersService.getUserByEmail(
-          clerkUser.primaryEmailAddress.emailAddress
-        );
-        setUser(firestoreUser);
-      } catch (error) {
-        console.error("Failed to load user profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadUser();
-  }, [clerkUser, isClerkLoaded]);
+    return () => unsubscribe();
+  }, []);
 
   const isAdmin = user?.isAdmin === true;
   const adminType = user?.adminType;
 
   return (
-    <UserContext.Provider
-      value={{ user, loading: loading || !isClerkLoaded, isAdmin, adminType }}
-    >
+    <UserContext.Provider value={{ user, loading, isAdmin, adminType }}>
       {children}
     </UserContext.Provider>
   );

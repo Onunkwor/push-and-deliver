@@ -1,12 +1,14 @@
-import { useClerk } from "@clerk/clerk-react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Unauthorized() {
-  const { signOut } = useClerk();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await signOut();
-    window.location.href = "/sign-in";
+    await signOut(auth);
+    navigate("/sign-in");
   };
 
   return (

@@ -95,7 +95,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useCurrentUser();
-  const adminType = user?.adminType || "regular";
+  const adminType = user?.adminType || "customercare";
 
   let navItems = [...data.navMain];
 
