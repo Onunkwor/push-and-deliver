@@ -1,4 +1,3 @@
-// src/components/app-sidebar.tsx
 import {
   IconCar,
   IconCash,
@@ -12,6 +11,7 @@ import {
   IconShoppingCart,
   IconTruckDelivery,
   IconUsers,
+  IconUserShield,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -25,7 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useUser } from "@clerk/clerk-react";
+import { useCurrentUser } from "@/contexts/UserContext";
 import { Link } from "react-router-dom";
 
 const data = {
@@ -94,7 +94,32 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser();
+  const { user } = useCurrentUser();
+  const adminType = user?.adminType || "regular";
+
+  let navItems = [...data.navMain];
+
+  if (adminType === "customercare") {
+    const allowedTitles = [
+      "Dashboard",
+      "Users",
+      "Riders",
+      "Restaurants",
+      "Support Tickets",
+      "Restaurant Orders",
+      "Shipment Orders",
+      "Ride Hailing",
+      "Coupons",
+    ];
+    navItems = navItems.filter((item) => allowedTitles.includes(item.title));
+  } else if (adminType === "super") {
+    // Add User Management for super admin
+    navItems.splice(1, 0, {
+      title: "User Management",
+      url: "/admin/users",
+      icon: IconUserShield,
+    });
+  }
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -114,14 +139,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser
           user={{
-            name: user?.fullName || "Admin",
-            email: user?.primaryEmailAddress?.emailAddress || "",
-            avatar: user?.imageUrl || "",
+            name: user?.username || "Admin",
+            email: user?.email || "",
+            avatar: user?.imageURL || "",
           }}
         />
       </SidebarFooter>

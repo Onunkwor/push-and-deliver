@@ -28,10 +28,14 @@ import {
   IconShoppingCart,
   IconBuildingStore,
 } from "@tabler/icons-react";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 export default function RestaurantOrderDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const isViewOnly = user?.adminType === "customercare";
+
   const [order, setOrder] = useState<RestaurantOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingPayment, setUpdatingPayment] = useState(false);
@@ -95,7 +99,8 @@ export default function RestaurantOrderDetailsPage() {
     );
   }
 
-  const canEditPayment = order.paymentType === 1 && !order.ispaid; // Only cash payments can be edited
+  const canEditPayment =
+    order.paymentType === 1 && !order.ispaid && !isViewOnly;
 
   return (
     <div className="flex flex-col gap-6">

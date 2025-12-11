@@ -42,8 +42,12 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { MoreHorizontal, Plus } from "lucide-react";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 export default function CouponsPage() {
+  const { user } = useCurrentUser();
+  const isAdminViewOnly = user?.adminType === "customercare";
+
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -179,48 +183,53 @@ export default function CouponsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Coupons</h1>
           <p className="text-muted-foreground">Manage your platform coupons</p>
         </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Coupon
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Coupon</DialogTitle>
-              <DialogDescription>
-                Create a new discount coupon for your users.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="create-percentage">
-                  Percentage Discount (%)
-                </Label>
-                <Input
-                  id="create-percentage"
-                  type="number"
-                  value={createValues.percentageDiscount}
-                  onChange={(e) =>
-                    setCreateValues({
-                      percentageDiscount: e.target.value,
-                    })
-                  }
-                  placeholder="e.g. 50"
-                />
+        {!isAdminViewOnly && (
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Coupon
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Coupon</DialogTitle>
+                <DialogDescription>
+                  Create a new discount coupon for your users.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="create-percentage">
+                    Percentage Discount (%)
+                  </Label>
+                  <Input
+                    id="create-percentage"
+                    type="number"
+                    value={createValues.percentageDiscount}
+                    onChange={(e) =>
+                      setCreateValues({
+                        percentageDiscount: e.target.value,
+                      })
+                    }
+                    placeholder="e.g. 50"
+                  />
+                </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateCoupon} disabled={createLoading}>
-                {createLoading ? "Creating..." : "Create Coupon"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreateOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateCoupon} disabled={createLoading}>
+                  {createLoading ? "Creating..." : "Create Coupon"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Coupons Table */}
@@ -238,14 +247,16 @@ export default function CouponsPage() {
                   <TableHead>Percentage Discount</TableHead>
                   <TableHead>Date Created</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {!isAdminViewOnly && (
+                    <TableHead className="text-right">Actions</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {coupons.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={isAdminViewOnly ? 4 : 5}
                       className="text-center text-muted-foreground py-8"
                     >
                       No coupons found
@@ -275,31 +286,33 @@ export default function CouponsPage() {
                           {coupon.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEditClick(coupon)}
-                            >
-                              Update
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() =>
-                                coupon.id && handleDeleteCoupon(coupon.id)
-                              }
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      {!isAdminViewOnly && (
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEditClick(coupon)}
+                              >
+                                Update
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() =>
+                                  coupon.id && handleDeleteCoupon(coupon.id)
+                                }
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
@@ -309,63 +322,65 @@ export default function CouponsPage() {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog - Kept outside the loop/table to avoid multiple instances */}
-      <Dialog
-        open={!!editingCoupon}
-        onOpenChange={(open) => !open && setEditingCoupon(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Coupon</DialogTitle>
-            <DialogDescription>
-              Modify the coupon details below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-percentage">Percentage Discount (%)</Label>
-              <Input
-                id="edit-percentage"
-                type="number"
-                value={editValues.percentageDiscount}
-                onChange={(e) =>
-                  setEditValues({
-                    ...editValues,
-                    percentageDiscount: e.target.value,
-                  })
-                }
-                placeholder="e.g. 50"
-              />
+      {/* Edit Dialog - Show only if not view only (though button is hidden) */}
+      {!isAdminViewOnly && (
+        <Dialog
+          open={!!editingCoupon}
+          onOpenChange={(open) => !open && setEditingCoupon(null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Update Coupon</DialogTitle>
+              <DialogDescription>
+                Modify the coupon details below.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-percentage">Percentage Discount (%)</Label>
+                <Input
+                  id="edit-percentage"
+                  type="number"
+                  value={editValues.percentageDiscount}
+                  onChange={(e) =>
+                    setEditValues({
+                      ...editValues,
+                      percentageDiscount: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. 50"
+                />
+              </div>
+              <div className="flex items-center justify-between space-x-2">
+                <Label htmlFor="edit-isActive">Active Status</Label>
+                <Switch
+                  id="edit-isActive"
+                  checked={editValues.isActive}
+                  onCheckedChange={(checked) =>
+                    setEditValues({
+                      ...editValues,
+                      isActive: checked,
+                    })
+                  }
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="edit-isActive">Active Status</Label>
-              <Switch
-                id="edit-isActive"
-                checked={editValues.isActive}
-                onCheckedChange={(checked) =>
-                  setEditValues({
-                    ...editValues,
-                    isActive: checked,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingCoupon(null)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateCoupon}
-              disabled={actionLoading === editingCoupon?.id}
-            >
-              {actionLoading === editingCoupon?.id
-                ? "Updating..."
-                : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingCoupon(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateCoupon}
+                disabled={actionLoading === editingCoupon?.id}
+              >
+                {actionLoading === editingCoupon?.id
+                  ? "Updating..."
+                  : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

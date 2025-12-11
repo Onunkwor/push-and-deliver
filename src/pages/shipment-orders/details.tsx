@@ -43,10 +43,14 @@ import {
 import { toast } from "sonner";
 import { Separator } from "@radix-ui/react-separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 export default function ShipmentOrderDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const isViewOnly = user?.adminType === "customercare";
+
   const [order, setOrder] = useState<ShipmentOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingPayment, setUpdatingPayment] = useState(false);
@@ -129,7 +133,8 @@ export default function ShipmentOrderDetailsPage() {
     );
   }
 
-  const canEditPayment = order.paymentType === 1 && !order.ispaid;
+  const canEditPayment =
+    order.paymentType === 1 && !order.ispaid && !isViewOnly;
   const isCustomClearance =
     order.shipmentType === IntlShipmentType.customclearance;
   const isExpress = order.shipmentType === IntlShipmentType.express;
@@ -193,7 +198,7 @@ export default function ShipmentOrderDetailsPage() {
             <Select
               value={order.orderStatus?.toString()}
               onValueChange={handleStatusChange}
-              disabled={updatingStatus}
+              disabled={updatingStatus || isViewOnly}
             >
               <SelectTrigger className="bg-white dark:bg-gray-900">
                 <SelectValue />

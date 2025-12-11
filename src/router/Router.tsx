@@ -1,4 +1,4 @@
-// src/router/Router.tsx
+import UserManagementPage from "@/pages/admin/user-management";
 import { Layout } from "@/components/layout";
 import CouponsPage from "@/pages/coupons";
 import DashboardPage from "@/pages/dashboard";
@@ -46,6 +46,10 @@ function Router() {
                 <Layout>
                   <Routes>
                     <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route
+                      path="/admin/users"
+                      element={<UserManagementPage />}
+                    />
                     <Route path="/users" element={<UsersPage />} />
                     <Route path="/users/:id" element={<UserDetailsPage />} />
                     <Route path="/riders" element={<RidersPage />} />

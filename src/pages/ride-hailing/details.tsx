@@ -41,10 +41,14 @@ import {
   IconTruck,
   IconClockHour4,
 } from "@tabler/icons-react";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 export default function RideHailingDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const isViewOnly = user?.adminType === "customercare";
+
   const [order, setOrder] = useState<RideHaulingOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatingPayment, setUpdatingPayment] = useState(false);
@@ -124,7 +128,8 @@ export default function RideHailingDetailsPage() {
     );
   }
 
-  const canEditPayment = order.paymentType === 1 && !order.ispaid;
+  const canEditPayment =
+    order.paymentType === 1 && !order.ispaid && !isViewOnly;
   const isCourier = order.rideType === RideHaulingType.courier;
   const hasRider = !!order.riderID;
 
@@ -276,7 +281,7 @@ export default function RideHailingDetailsPage() {
                   <Select
                     value={order.orderStatus?.toString()}
                     onValueChange={handleStatusChange}
-                    disabled={updatingStatus}
+                    disabled={updatingStatus || isViewOnly}
                   >
                     <SelectTrigger className="bg-white dark:bg-gray-900">
                       <SelectValue />
