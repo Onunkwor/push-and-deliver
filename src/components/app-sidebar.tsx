@@ -57,16 +57,6 @@ const data = {
       icon: IconCoin,
     },
     {
-      title: "Export Rates",
-      url: "/export-rates",
-      icon: IconPlane,
-    },
-    {
-      title: "Delivery Zones",
-      url: "/delivery-zones",
-      icon: IconMapPin,
-    },
-    {
       title: "Referrals",
       url: "/referrals",
       icon: IconGift,
@@ -100,6 +90,16 @@ const data = {
       title: "Ride Hailing",
       url: "/ride-hailing",
       icon: IconCar,
+    },
+    {
+      title: "Export Rates",
+      url: "/export-rates",
+      icon: IconPlane,
+    },
+    {
+      title: "Delivery Zones",
+      url: "/delivery-zones",
+      icon: IconMapPin,
     },
   ],
 };
