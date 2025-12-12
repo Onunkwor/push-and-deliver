@@ -447,4 +447,15 @@ export interface RideHaulingOrder {
   vehicleType?: string | null;
 }
 
+export interface State {
+  id: string;
+  name: string;
+}
+
+export interface LGA {
+  id: string;
+  name: string;
+  deliveryfee: number;
+}
+
 export * from "./export-rates";

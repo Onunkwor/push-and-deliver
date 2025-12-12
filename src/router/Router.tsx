@@ -5,6 +5,7 @@ import DashboardPage from "@/pages/dashboard";
 import FeesPage from "@/pages/fees";
 import ExportRatesPage from "@/pages/export-rates";
 import ReferralsPage from "@/pages/referrals";
+import DeliveryZonesPage from "@/pages/delivery-zones";
 import RestaurantOrdersPage from "@/pages/restaurant-orders";
 import RestaurantOrderDetailsPage from "@/pages/restaurant-orders/details";
 import RideHailingPage from "@/pages/ride-hailing";
@@ -63,6 +64,10 @@ function Router() {
                   <Route path="/vendors/:id" element={<VendorDetailsPage />} />
                   <Route path="/fees" element={<FeesPage />} />
                   <Route path="/export-rates" element={<ExportRatesPage />} />
+                  <Route
+                    path="/delivery-zones"
+                    element={<DeliveryZonesPage />}
+                  />
                   <Route path="/referrals" element={<ReferralsPage />} />
                   <Route path="/withdrawals" element={<WithdrawalsPage />} />
                   <Route path="/coupons" element={<CouponsPage />} />

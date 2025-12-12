@@ -6,6 +6,7 @@ import {
   IconGift,
   IconGiftCard,
   IconHeadset,
+  IconMapPin,
   IconMotorbike,
   IconPlane,
   IconShoppingCart,
@@ -59,6 +60,11 @@ const data = {
       title: "Export Rates",
       url: "/export-rates",
       icon: IconPlane,
+    },
+    {
+      title: "Delivery Zones",
+      url: "/delivery-zones",
+      icon: IconMapPin,
     },
     {
       title: "Referrals",
