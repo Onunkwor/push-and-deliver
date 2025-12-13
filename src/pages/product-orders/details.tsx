@@ -8,13 +8,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
@@ -33,6 +26,10 @@ import {
   Phone,
   Store,
   User,
+  Clock,
+  CheckCircle,
+  Truck,
+  AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -46,7 +43,6 @@ export default function ProductOrderDetailsPage() {
 
   const [order, setOrder] = useState<ProductOrder | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updatingPayment, setUpdatingPayment] = useState(false);
 
   useEffect(() => {
@@ -70,24 +66,6 @@ export default function ProductOrderDetailsPage() {
       toast.error("Failed to load order details");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!order?.id) return;
-
-    try {
-      setUpdatingStatus(true);
-      await productOrdersService.updateOrderStatus(
-        order.id,
-        parseInt(newStatus)
-      );
-      setOrder({ ...order, orderstatus: parseInt(newStatus) as OrderStatus });
-      toast.success("Order status updated successfully");
-    } catch (error) {
-      toast.error("Failed to update order status");
-    } finally {
-      setUpdatingStatus(false);
     }
   };
 
@@ -138,6 +116,65 @@ export default function ProductOrderDetailsPage() {
             Unknown
           </Badge>
         );
+    }
+  };
+
+  const getStatusInfo = (status?: number) => {
+    switch (status) {
+      case OrderStatus.Pending:
+        return {
+          label: "Pending",
+          icon: Clock,
+          colorClass:
+            "from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900 border-amber-200 dark:border-amber-800",
+          textClass: "text-amber-900 dark:text-amber-100",
+          badgeVariant: "secondary" as const,
+        };
+      case OrderStatus.Assigned:
+        return {
+          label: "Assigned",
+          icon: CheckCircle,
+          colorClass:
+            "from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800",
+          textClass: "text-blue-900 dark:text-blue-100",
+          badgeVariant: "default" as const,
+        };
+      case OrderStatus.PickedUp:
+        return {
+          label: "Picked Up",
+          icon: Truck,
+          colorClass:
+            "from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900 border-indigo-200 dark:border-indigo-800",
+          textClass: "text-indigo-900 dark:text-indigo-100",
+          badgeVariant: "default" as const,
+        };
+      case OrderStatus.OutForDelivery:
+        return {
+          label: "Out for Delivery",
+          icon: Truck,
+          colorClass:
+            "from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800",
+          textClass: "text-orange-900 dark:text-orange-100",
+          badgeVariant: "default" as const,
+        };
+      case OrderStatus.Delivered:
+        return {
+          label: "Delivered",
+          icon: CheckCircle,
+          colorClass:
+            "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800",
+          textClass: "text-green-900 dark:text-green-100",
+          badgeVariant: "default" as const,
+        };
+      default:
+        return {
+          label: "Unknown",
+          icon: AlertTriangle,
+          colorClass:
+            "from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 border-gray-200 dark:border-gray-800",
+          textClass: "text-gray-900 dark:text-gray-100",
+          badgeVariant: "outline" as const,
+        };
     }
   };
 
@@ -204,41 +241,33 @@ export default function ProductOrderDetailsPage() {
       {/* Status Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Order Status Card */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              Order Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select
-              value={order.orderstatus?.toString()}
-              onValueChange={handleStatusChange}
-              disabled={updatingStatus || isViewOnly}
-            >
-              <SelectTrigger className="bg-white dark:bg-gray-900 border-blue-300 dark:border-blue-700">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={OrderStatus.Pending.toString()}>
-                  Pending
-                </SelectItem>
-                <SelectItem value={OrderStatus.Assigned.toString()}>
-                  Assigned
-                </SelectItem>
-                <SelectItem value={OrderStatus.PickedUp.toString()}>
-                  Picked Up
-                </SelectItem>
-                <SelectItem value={OrderStatus.OutForDelivery.toString()}>
-                  Out for Delivery
-                </SelectItem>
-                <SelectItem value={OrderStatus.Delivered.toString()}>
-                  Delivered
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        {(() => {
+          const statusInfo = getStatusInfo(order.orderstatus);
+          const StatusIcon = statusInfo.icon;
+
+          return (
+            <Card className={`bg-gradient-to-br ${statusInfo.colorClass}`}>
+              <CardHeader className="pb-3">
+                <CardTitle
+                  className={`text-sm font-medium ${statusInfo.textClass}`}
+                >
+                  Order Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <StatusIcon className={`h-5 w-5 ${statusInfo.textClass}`} />
+                  <Badge
+                    variant={statusInfo.badgeVariant}
+                    className="text-sm font-semibold"
+                  >
+                    {statusInfo.label}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Payment Status Card */}
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
@@ -451,20 +480,6 @@ export default function ProductOrderDetailsPage() {
                   </div>
                 </div>
               </div>
-
-              {order.otp && (
-                <>
-                  <Separator />
-                  <div className="bg-muted/50 p-4 rounded-lg text-center border-2 border-dashed">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5">
-                      Delivery OTP
-                    </p>
-                    <p className="text-3xl font-mono font-bold tracking-widest">
-                      {order.otp}
-                    </p>
-                  </div>
-                </>
-              )}
             </CardContent>
           </Card>
 
