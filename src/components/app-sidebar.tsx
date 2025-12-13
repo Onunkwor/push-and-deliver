@@ -9,6 +9,7 @@ import {
   IconMapPin,
   IconMotorbike,
   IconPlane,
+  IconShoppingBag,
   IconShoppingCart,
   IconTruckDelivery,
   IconUsers,
@@ -50,6 +51,11 @@ const data = {
       title: "Restaurants",
       url: "/vendors",
       icon: IconTruckDelivery,
+    },
+    {
+      title: "E-commerce Merchants",
+      url: "/ecommerce-merchants",
+      icon: IconShoppingBag,
     },
     {
       title: "Fees",
@@ -116,6 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       "Users",
       "Riders",
       "Restaurants",
+      "E-commerce Merchants",
       "Support Tickets",
       "Restaurant Orders",
       "Shipment Orders",

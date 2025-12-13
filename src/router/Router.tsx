@@ -19,6 +19,11 @@ import UsersPage from "@/pages/users";
 import UserDetailsPage from "@/pages/users/details";
 import VendorsPage from "@/pages/vendors";
 import VendorDetailsPage from "@/pages/vendors/details";
+import EcommerceMerchantsPage from "@/pages/ecommerce-merchants";
+import EcommerceMerchantDetailsPage from "@/pages/ecommerce-merchants/details";
+import MerchantProductsPage from "@/pages/ecommerce-merchants/products";
+import ProductDetailsPage from "@/pages/ecommerce-merchants/product-details";
+import MerchantTransactionsPage from "@/pages/ecommerce-merchants/transactions";
 import WithdrawalsPage from "@/pages/withdrawals";
 import SignInPage from "@/pages/auth/sign-in";
 import SignUpPage from "@/pages/auth/sign-up";
@@ -62,6 +67,26 @@ function Router() {
                   <Route path="/riders/:id" element={<RiderDetailsPage />} />
                   <Route path="/vendors" element={<VendorsPage />} />
                   <Route path="/vendors/:id" element={<VendorDetailsPage />} />
+                  <Route
+                    path="/ecommerce-merchants"
+                    element={<EcommerceMerchantsPage />}
+                  />
+                  <Route
+                    path="/ecommerce-merchants/:id"
+                    element={<EcommerceMerchantDetailsPage />}
+                  />
+                  <Route
+                    path="/ecommerce-merchants/:id/products"
+                    element={<MerchantProductsPage />}
+                  />
+                  <Route
+                    path="/ecommerce-merchants/:id/products/:productId"
+                    element={<ProductDetailsPage />}
+                  />
+                  <Route
+                    path="/ecommerce-merchants/:id/transactions"
+                    element={<MerchantTransactionsPage />}
+                  />
                   <Route path="/fees" element={<FeesPage />} />
                   <Route path="/export-rates" element={<ExportRatesPage />} />
                   <Route

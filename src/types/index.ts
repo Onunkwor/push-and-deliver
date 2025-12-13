@@ -447,6 +447,91 @@ export interface RideHaulingOrder {
   vehicleType?: string | null;
 }
 
+// E-commerce Merchant Enums
+export const EcommerceMerchantVerificationStatus = {
+  unverified: 0,
+  verified: 1,
+} as const;
+export type EcommerceMerchantVerificationStatus =
+  (typeof EcommerceMerchantVerificationStatus)[keyof typeof EcommerceMerchantVerificationStatus];
+
+// E-commerce Merchant Interfaces
+export interface EcommerceMerchant {
+  id?: string;
+  categories?: string[];
+  createdAt?: Timestamp | Date;
+  currency?: string;
+  displayName?: string;
+  email?: string;
+  fcmtoken?: string;
+  isOpen?: boolean;
+  legalName?: string;
+  location?: {
+    geohash?: string;
+    geopoint?: GeoPoint;
+  };
+  phonenumber?: string;
+  physicalAddress?: string;
+  rating?: number;
+  salesMetrics?: {
+    ordersCount?: number;
+    totalSales?: number;
+  };
+  settings?: {
+    autoAcceptOrders?: boolean;
+    requireInventoryCheck?: boolean;
+  };
+  shippingProfiles?: any[];
+  shopImage?: string;
+  slug?: string;
+  storefront?: {
+    description?: string;
+    featuredProductIds?: string[];
+    heroImage?: string;
+  };
+  taxRatePercent?: number;
+  updatedAt?: Timestamp | Date;
+  verificationStatus?: number;
+  walletBalance?: number;
+}
+
+export interface Product {
+  id?: string;
+  category?: string;
+  color?: string | null;
+  colorList?: string[];
+  createdAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
+  description?: string;
+  hasVariants?: boolean;
+  imageUrls?: string[];
+  isPublished?: string | boolean;
+  name?: string;
+  price?: number;
+  sizeList?: string[];
+  stock?: number;
+  vendorId?: string;
+  vendorName?: string;
+  vendorLocation?: {
+    geohash?: string;
+    geopoint?: GeoPoint;
+  };
+}
+
+export interface ProductVariant {
+  id?: string;
+  color?: string | null;
+  colorList?: string[];
+  createdAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
+  imageUrls?: string[];
+  name?: string;
+  price?: number;
+  productId?: string;
+  sizeList?: string[];
+  stock?: number;
+}
+
 export interface State {
   id: string;
   name: string;
