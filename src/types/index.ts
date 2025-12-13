@@ -36,8 +36,8 @@ export type TransactionStatus =
   (typeof TransactionStatus)[keyof typeof TransactionStatus];
 
 export const TransactionType = {
-  Credit: "Credit",
-  Debit: "Debit",
+  Credit: 0,
+  Debit: 1,
 } as const;
 export type TransactionType =
   (typeof TransactionType)[keyof typeof TransactionType];

@@ -53,11 +53,6 @@ const data = {
       icon: IconTruckDelivery,
     },
     {
-      title: "E-commerce Merchants",
-      url: "/ecommerce-merchants",
-      icon: IconShoppingBag,
-    },
-    {
       title: "Fees",
       url: "/fees",
       icon: IconCoin,
@@ -106,6 +101,11 @@ const data = {
       title: "Delivery Zones",
       url: "/delivery-zones",
       icon: IconMapPin,
+    },
+    {
+      title: "E-commerce Merchants",
+      url: "/ecommerce-merchants",
+      icon: IconShoppingBag,
     },
   ],
 };
