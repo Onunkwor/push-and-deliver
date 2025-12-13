@@ -1,17 +1,6 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Package, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -29,10 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/contexts/UserContext";
 import { ecommerceMerchantsService } from "@/services/ecommerce-merchants.service";
 import type { EcommerceMerchant } from "@/types";
+import { ArrowLeft, Package, Receipt } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const formatAmount = (amount: number) => {
   return amount.toLocaleString("en-US", {
@@ -59,6 +52,9 @@ export default function EcommerceMerchantDetailsPage() {
   const [newVerificationStatus, setNewVerificationStatus] = useState<number>(0);
   const [updating, setUpdating] = useState(false);
   const [hasTransactions, setHasTransactions] = useState(false);
+
+  const { user } = useCurrentUser();
+  const isViewOnly = user?.adminType === "customercare";
 
   useEffect(() => {
     if (id) {
@@ -227,7 +223,7 @@ export default function EcommerceMerchantDetailsPage() {
                       variant="outline"
                       size="sm"
                       onClick={handleEditClick}
-                      className="h-6 text-xs"
+                      className={`h-6 text-xs ${isViewOnly ? "hidden" : ""}`}
                     >
                       Edit
                     </Button>
