@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,38 +7,47 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { productOrdersService } from "@/services/product-orders.service";
-import type { ProductOrder, OrderItem } from "@/types";
-import { OrderStatus } from "@/types";
-import { toast } from "sonner";
-import { format } from "date-fns";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { useCurrentUser } from "@/contexts/UserContext";
+import { productOrdersService } from "@/services/product-orders.service";
+import type { OrderItem, ProductOrder } from "@/types";
+import { OrderStatus } from "@/types";
+import { format } from "date-fns";
 import {
   ArrowLeft,
+  Bike,
+  Calendar,
+  Mail,
   MapPin,
+  Package,
+  Phone,
   Store,
   User,
-  Bike,
-  CheckCircle2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function ProductOrderDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const isViewOnly = user?.adminType === "customercare";
+
   const [order, setOrder] = useState<ProductOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingPayment, setUpdatingPayment] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -64,30 +73,75 @@ export default function ProductOrderDetailsPage() {
     }
   };
 
-  const getStatusBadge = (status?: number) => {
-    switch (status) {
-      case OrderStatus.Pending:
-        return <Badge variant="secondary">Pending</Badge>;
-      case OrderStatus.Assigned:
-        return <Badge className="bg-blue-500">Assigned</Badge>;
-      case OrderStatus.PickedUp:
-        return <Badge className="bg-indigo-500">Picked Up</Badge>;
-      case OrderStatus.OutForDelivery:
-        return <Badge className="bg-orange-500">Out for Delivery</Badge>;
-      case OrderStatus.Delivered:
-        return <Badge className="bg-green-500">Delivered</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
+  const handleStatusChange = async (newStatus: string) => {
+    if (!order?.id) return;
+
+    try {
+      setUpdatingStatus(true);
+      await productOrdersService.updateOrderStatus(
+        order.id,
+        parseInt(newStatus)
+      );
+      setOrder({ ...order, orderstatus: parseInt(newStatus) as OrderStatus });
+      toast.success("Order status updated successfully");
+    } catch (error) {
+      toast.error("Failed to update order status");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
-  const statusSteps = [
-    { label: "Pending", value: OrderStatus.Pending },
-    { label: "Assigned", value: OrderStatus.Assigned },
-    { label: "Picked Up", value: OrderStatus.PickedUp },
-    { label: "Out for Delivery", value: OrderStatus.OutForDelivery },
-    { label: "Delivered", value: OrderStatus.Delivered },
-  ];
+  const handlePaymentStatusToggle = async (checked: boolean) => {
+    if (!order?.id) return;
+
+    try {
+      setUpdatingPayment(true);
+      await productOrdersService.updatePaymentStatus(order.id, checked);
+      setOrder({ ...order, ispaid: checked });
+      toast.success(`Payment status updated to ${checked ? "Paid" : "Unpaid"}`);
+    } catch (error) {
+      toast.error("Failed to update payment status");
+    } finally {
+      setUpdatingPayment(false);
+    }
+  };
+
+  const getStatusBadge = (status?: number) => {
+    switch (status) {
+      case OrderStatus.Pending:
+        return (
+          <Badge variant="secondary" className="text-sm px-3 py-1">
+            Pending
+          </Badge>
+        );
+      case OrderStatus.Assigned:
+        return (
+          <Badge className="bg-blue-500 text-sm px-3 py-1">Assigned</Badge>
+        );
+      case OrderStatus.PickedUp:
+        return (
+          <Badge className="bg-indigo-500 text-sm px-3 py-1">Picked Up</Badge>
+        );
+      case OrderStatus.OutForDelivery:
+        return (
+          <Badge className="bg-orange-500 text-sm px-3 py-1">
+            Out for Delivery
+          </Badge>
+        );
+      case OrderStatus.Delivered:
+        return (
+          <Badge className="bg-green-500 text-sm px-3 py-1">Delivered</Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-sm px-3 py-1">
+            Unknown
+          </Badge>
+        );
+    }
+  };
+
+  const canEditPayment = !order?.ispaid && !isViewOnly;
 
   if (loading) {
     return (
@@ -98,6 +152,11 @@ export default function ProductOrderDetailsPage() {
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-32" />
           </div>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
         <div className="grid gap-6 md:grid-cols-2">
           <Skeleton className="h-64 w-full" />
@@ -110,7 +169,7 @@ export default function ProductOrderDetailsPage() {
   if (!order) return null;
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-10">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button
@@ -121,22 +180,20 @@ export default function ProductOrderDetailsPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-bold tracking-tight">
               Order #{order.orderId || order.id?.substring(0, 8)}
             </h1>
             {getStatusBadge(order.orderstatus)}
-            {order.ispaid === false && (
-              <Badge
-                variant="outline"
-                className="text-red-500 border-red-200 bg-red-50"
-              >
-                Unpaid
-              </Badge>
-            )}
+            <Badge
+              variant={order.ispaid === false ? "destructive" : "default"}
+              className="text-sm px-3 py-1"
+            >
+              {order.ispaid === false ? "Unpaid" : "Paid"}
+            </Badge>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Created on{" "}
+          <p className="text-muted-foreground text-sm mt-1 flex items-center gap-1.5">
+            <Calendar className="h-4 w-4" />
             {order.createdAt
               ? format(order.createdAt as Date, "MMMM d, yyyy 'at' h:mm a")
               : "N/A"}
@@ -144,166 +201,198 @@ export default function ProductOrderDetailsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Left Column - Order Items & Status */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Status Timeline */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative flex justify-between">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted -z-10 -translate-y-1/2" />
-                {statusSteps.map((step, index) => {
-                  const isCompleted = (order.orderstatus || 0) >= step.value;
-                  const isCurrent = (order.orderstatus || 0) === step.value;
+      {/* Status Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Order Status Card */}
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              Order Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select
+              value={order.orderstatus?.toString()}
+              onValueChange={handleStatusChange}
+              disabled={updatingStatus || isViewOnly}
+            >
+              <SelectTrigger className="bg-white dark:bg-gray-900 border-blue-300 dark:border-blue-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={OrderStatus.Pending.toString()}>
+                  Pending
+                </SelectItem>
+                <SelectItem value={OrderStatus.Assigned.toString()}>
+                  Assigned
+                </SelectItem>
+                <SelectItem value={OrderStatus.PickedUp.toString()}>
+                  Picked Up
+                </SelectItem>
+                <SelectItem value={OrderStatus.OutForDelivery.toString()}>
+                  Out for Delivery
+                </SelectItem>
+                <SelectItem value={OrderStatus.Delivered.toString()}>
+                  Delivered
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
 
-                  return (
-                    <div
-                      key={step.value}
-                      className="flex flex-col items-center gap-2 bg-background px-2"
-                    >
-                      <div
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors",
-                          isCompleted
-                            ? "border-primary bg-primary text-primary-foreground"
-                            : "border-muted bg-background text-muted-foreground"
-                        )}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle2 className="h-4 w-4" />
-                        ) : (
-                          <span className="text-xs">{index + 1}</span>
-                        )}
-                      </div>
-                      <span
-                        className={cn(
-                          "text-xs font-medium",
-                          isCurrent
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        )}
-                      >
-                        {step.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Payment Status Card */}
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-green-900 dark:text-green-100">
+              Payment Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                {order.ispaid ? "Paid" : "Unpaid"}
+              </span>
+              {canEditPayment && (
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor="payment-toggle"
+                    className="text-xs text-green-800 dark:text-green-200"
+                  >
+                    Mark as Paid
+                  </Label>
+                  <Switch
+                    id="payment-toggle"
+                    checked={order.ispaid || false}
+                    onCheckedChange={handlePaymentStatusToggle}
+                    disabled={updatingPayment}
+                  />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
+        {/* Total Amount Card */}
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-purple-900 dark:text-purple-100">
+              Total Amount
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+              ₦{(order.total || 0).toLocaleString()}
+            </p>
+            <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+              {order.orderItems?.length || 0} items
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column - Order Items */}
+        <div className="lg:col-span-2 space-y-6">
           {/* Order Items */}
           <Card>
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
                 Order Items ({order.orderItems?.length || 0})
               </CardTitle>
+              <CardDescription>Product details and quantities</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Options</TableHead>
-                    <TableHead className="text-right">Price</TableHead>
-                    <TableHead className="text-right">Qty</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {order.orderItems?.map((item: OrderItem, idx: number) => (
-                    <TableRow key={item.id || idx}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {item.imageUrl ? (
-                            <img
-                              src={item.imageUrl}
-                              alt={item.name}
-                              className="h-12 w-12 rounded-md object-cover border"
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
-                              <Store className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium text-sm">{item.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              {item.category}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-xs space-y-1">
-                          {item.selectedColor && (
-                            <div className="flex items-center gap-1">
-                              <span className="text-muted-foreground">
-                                Color:
-                              </span>
-                              <span className="font-medium">
-                                {item.selectedColor}
-                              </span>
-                            </div>
-                          )}
-                          {item.selectedSize && (
-                            <div className="flex items-center gap-1">
-                              <span className="text-muted-foreground">
-                                Size:
-                              </span>
-                              <span className="font-medium">
-                                {item.selectedSize}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
+              <div className="space-y-4">
+                {order.orderItems?.map((item: OrderItem, idx: number) => (
+                  <div
+                    key={item.id || idx}
+                    className="flex gap-4 p-4 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="h-20 w-20 rounded-md object-cover border flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                        <Store className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-base line-clamp-1">
+                        {item.name}
+                      </h4>
+                      <p className="text-sm text-muted-foreground capitalize mt-0.5">
+                        {item.category}
+                      </p>
+                      <div className="flex flex-wrap gap-3 mt-2 text-sm">
+                        {item.selectedColor && (
+                          <span className="text-muted-foreground">
+                            Color:{" "}
+                            <span className="font-medium text-foreground">
+                              {item.selectedColor}
+                            </span>
+                          </span>
+                        )}
+                        {item.selectedSize && (
+                          <span className="text-muted-foreground">
+                            Size:{" "}
+                            <span className="font-medium text-foreground">
+                              {item.selectedSize}
+                            </span>
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">
+                          Qty:{" "}
+                          <span className="font-medium text-foreground">
+                            {item.qty}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm text-muted-foreground">
+                        Unit Price
+                      </p>
+                      <p className="font-medium">
                         ₦{(item.price || 0).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">{item.qty}</TableCell>
-                      <TableCell className="text-right font-medium">
+                      </p>
+                      <Separator className="my-2" />
+                      <p className="text-sm text-muted-foreground">Subtotal</p>
+                      <p className="text-lg font-bold">
                         ₦{(item.subtotal || 0).toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      </p>
+                    </div>
+                  </div>
+                ))}
 
-                  {/* Summary Rows */}
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-right font-medium">
-                      Subtotal
-                    </TableCell>
-                    <TableCell className="text-right">
+                {/* Summary */}
+                <Separator className="my-4" />
+                <div className="space-y-2 text-right">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Subtotal:</span>
+                    <span className="font-medium">
                       ₦
                       {(
                         (order.total || 0) - (order.deliveryFee || 0)
                       ).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-right font-medium">
-                      Delivery Fee
-                    </TableCell>
-                    <TableCell className="text-right">
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Delivery Fee:</span>
+                    <span className="font-medium">
                       ₦{(order.deliveryFee || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-right font-bold text-lg"
-                    >
-                      Total
-                    </TableCell>
-                    <TableCell className="text-right font-bold text-lg">
-                      ₦{(order.total || 0).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                    </span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span>₦{(order.total || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -317,23 +406,39 @@ export default function ProductOrderDetailsPage() {
                 <User className="h-4 w-4" /> Customer Details
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <div>
-                <p className="text-sm font-medium">{order.customerName}</p>
-                <p className="text-sm text-muted-foreground">
-                  {order.customerPhoneNumber}
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-medium">{order.customerName || "N/A"}</p>
+              </div>
+              <Separator />
+              <div>
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" /> Phone
+                </p>
+                <p className="font-medium font-mono text-sm">
+                  {order.customerPhoneNumber || "N/A"}
                 </p>
               </div>
-
+              {order.customerEmail && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5" /> Email
+                    </p>
+                    <p className="font-medium text-sm">{order.customerEmail}</p>
+                  </div>
+                </>
+              )}
               <Separator />
-
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <div className="space-y-1">
+                  <div className="space-y-1 flex-1">
                     <p className="text-sm font-medium">Delivery Address</p>
-                    <p className="text-sm text-muted-foreground">
-                      {order.deliveryaddress}
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {order.deliveryaddress || "N/A"}
                     </p>
                     {order.lga && order.state && (
                       <Badge
@@ -348,14 +453,17 @@ export default function ProductOrderDetailsPage() {
               </div>
 
               {order.otp && (
-                <div className="bg-muted/50 p-3 rounded-md text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                    Delivery OTP
-                  </p>
-                  <p className="text-2xl font-mono font-bold tracking-widest">
-                    {order.otp}
-                  </p>
-                </div>
+                <>
+                  <Separator />
+                  <div className="bg-muted/50 p-4 rounded-lg text-center border-2 border-dashed">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5">
+                      Delivery OTP
+                    </p>
+                    <p className="text-3xl font-mono font-bold tracking-widest">
+                      {order.otp}
+                    </p>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -369,15 +477,25 @@ export default function ProductOrderDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-sm font-medium">
+                <p className="text-sm text-muted-foreground">Merchant</p>
+                <p className="font-medium">
                   {order.vendorName || "Unknown Vendor"}
                 </p>
-                {order.vendorAddress && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {order.vendorAddress}
-                  </p>
-                )}
               </div>
+              {order.vendorAddress && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5" /> Address
+                    </p>
+                    <p className="text-sm leading-relaxed mt-1">
+                      {order.vendorAddress}
+                    </p>
+                  </div>
+                </>
+              )}
+              <Separator />
               <div className="flex items-center gap-2">
                 <Badge
                   variant={
@@ -404,11 +522,19 @@ export default function ProductOrderDetailsPage() {
               {order.riderid ? (
                 <>
                   <div>
-                    <p className="text-sm font-medium">{order.ridername}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {order.riderphonenumber}
+                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="font-medium">{order.ridername || "N/A"}</p>
+                  </div>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5" /> Phone
+                    </p>
+                    <p className="font-medium font-mono text-sm">
+                      {order.riderphonenumber || "N/A"}
                     </p>
                   </div>
+                  <Separator />
                   <div className="flex items-center gap-2">
                     <Badge
                       variant={
@@ -423,8 +549,9 @@ export default function ProductOrderDetailsPage() {
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-lg border border-dashed">
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex flex-col items-center justify-center p-6 bg-muted/30 rounded-lg border border-dashed">
+                  <Bike className="h-8 w-8 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground text-center">
                     No rider assigned yet
                   </p>
                 </div>

@@ -592,6 +592,7 @@ export interface OrderItem {
 }
 
 export interface ProductOrder {
+  customerEmail: string;
   id?: string;
   orderId?: string;
 

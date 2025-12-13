@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +18,7 @@ import { OrderStatus } from "@/types";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Search } from "lucide-react";
+import { Search, Package } from "lucide-react";
 
 export default function ProductOrdersPage() {
   const navigate = useNavigate();
@@ -89,17 +88,41 @@ export default function ProductOrdersPage() {
   const getStatusBadge = (status?: number) => {
     switch (status) {
       case OrderStatus.Pending:
-        return <Badge variant="secondary">Pending</Badge>;
+        return (
+          <Badge variant="secondary" className="font-medium">
+            Pending
+          </Badge>
+        );
       case OrderStatus.Assigned:
-        return <Badge className="bg-blue-500">Assigned</Badge>;
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600 font-medium">
+            Assigned
+          </Badge>
+        );
       case OrderStatus.PickedUp:
-        return <Badge className="bg-indigo-500">Picked Up</Badge>;
+        return (
+          <Badge className="bg-indigo-500 hover:bg-indigo-600 font-medium">
+            Picked Up
+          </Badge>
+        );
       case OrderStatus.OutForDelivery:
-        return <Badge className="bg-orange-500">Out for Delivery</Badge>;
+        return (
+          <Badge className="bg-orange-500 hover:bg-orange-600 font-medium">
+            Out for Delivery
+          </Badge>
+        );
       case OrderStatus.Delivered:
-        return <Badge className="bg-green-500">Delivered</Badge>;
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600 font-medium">
+            Delivered
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return (
+          <Badge variant="outline" className="font-medium">
+            Unknown
+          </Badge>
+        );
     }
   };
 
@@ -155,79 +178,100 @@ export default function ProductOrdersPage() {
                   <Skeleton className="h-12 w-full" />
                 </div>
               ) : filteredOrders.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  No orders found.
+                <div className="p-12 text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                      <Package className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No orders found
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {searchQuery
+                      ? "Try adjusting your search criteria"
+                      : "Product orders will appear here"}
+                  </p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Items</TableHead>
-                      <TableHead>Total Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Created At</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredOrders.map((order) => (
-                      <TableRow
-                        key={order.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleRowClick(order.id!)}
-                      >
-                        <TableCell className="font-medium">
-                          {order.orderId || order.id?.substring(0, 8)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {order.customerName || "N/A"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {order.customerPhoneNumber}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {order.orderItems?.length || 0} items
-                        </TableCell>
-                        <TableCell>
-                          ₦{(order.total || 0).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(order.orderstatus)}
-                        </TableCell>
-                        <TableCell
-                          className="max-w-[200px] truncate"
-                          title={order.deliveryaddress}
-                        >
-                          {order.deliveryaddress || "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          {order.createdAt
-                            ? format(
-                                order.createdAt as Date,
-                                "MMM d, yyyy h:mm a"
-                              )
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="font-semibold">
+                          Order ID
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Customer
+                        </TableHead>
+                        <TableHead className="font-semibold">Items</TableHead>
+                        <TableHead className="font-semibold">
+                          Total Amount
+                        </TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="font-semibold">Address</TableHead>
+                        <TableHead className="font-semibold">
+                          Created At
+                        </TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOrders.map((order) => (
+                        <TableRow
+                          key={order.id}
+                          className="cursor-pointer hover:bg-muted/70 transition-colors group"
+                          onClick={() => handleRowClick(order.id!)}
+                        >
+                          <TableCell className="font-mono font-medium text-sm">
+                            {order.orderId || order.id?.substring(0, 8)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {order.customerName || "N/A"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {order.customerPhoneNumber}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1.5">
+                              <Package className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">
+                                {order.orderItems?.length || 0}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            ₦{(order.total || 0).toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(order.orderstatus)}
+                          </TableCell>
+                          <TableCell
+                            className="max-w-[250px]"
+                            title={order.deliveryaddress}
+                          >
+                            <div className="truncate text-sm text-muted-foreground">
+                              {order.deliveryaddress || "N/A"}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {order.createdAt
+                              ? format(order.createdAt as Date, "MMM d, yyyy")
+                              : "N/A"}
+                            <div className="text-xs text-muted-foreground">
+                              {order.createdAt
+                                ? format(order.createdAt as Date, "h:mm a")
+                                : ""}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>

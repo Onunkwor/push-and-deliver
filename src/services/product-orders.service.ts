@@ -6,6 +6,7 @@ import {
   query,
   orderBy,
   where,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { ProductOrder } from "@/types";
@@ -85,6 +86,32 @@ export const productOrdersService = {
       })) as ProductOrder[];
     } catch (error) {
       console.error("Error fetching orders by status:", error);
+      throw error;
+    }
+  },
+
+  // Update order status
+  async updateOrderStatus(orderId: string, status: number): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, orderId);
+      await updateDoc(docRef, {
+        orderstatus: status,
+      });
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      throw error;
+    }
+  },
+
+  // Update payment status
+  async updatePaymentStatus(orderId: string, isPaid: boolean): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, orderId);
+      await updateDoc(docRef, {
+        ispaid: isPaid,
+      });
+    } catch (error) {
+      console.error("Error updating payment status:", error);
       throw error;
     }
   },
