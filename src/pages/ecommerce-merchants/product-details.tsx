@@ -18,11 +18,13 @@ export default function ProductDetailsPage() {
   const { id, productId } = useParams<{ id: string; productId: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
-  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null
   );
+  const [allVariants, setAllVariants] = useState<ProductVariant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingVariant, setLoadingVariant] = useState(false);
 
   useEffect(() => {
     if (id && productId) {
@@ -46,17 +48,24 @@ export default function ProductDetailsPage() {
 
       setProduct(productData);
 
-      // Load variants if product has them
+      // Check if product has variants
       if (productData.hasVariants) {
-        const variantsData = await ecommerceMerchantsService.getProductVariants(
-          id!,
-          productId!
-        );
-        setVariants(variantsData);
+        const hasColorList =
+          productData.colorList && productData.colorList.length > 0;
 
-        // Set first variant as selected by default
-        if (variantsData.length > 0) {
-          setSelectedVariant(variantsData[0]);
+        if (hasColorList) {
+          // Color-based variants: select first color
+          const firstColor = productData.colorList![0];
+          setSelectedColor(firstColor);
+          await loadVariantForColor(firstColor);
+        } else {
+          // Name-based variants: fetch all variants, don't auto-select (show base product by default)
+          const variants = await ecommerceMerchantsService.getProductVariants(
+            id!,
+            productId!
+          );
+          setAllVariants(variants);
+          // selectedVariant stays null, showing base product by default
         }
       }
     } catch (error) {
@@ -67,17 +76,47 @@ export default function ProductDetailsPage() {
     }
   };
 
-  const handleVariantSelect = (variant: ProductVariant) => {
+  const loadVariantForColor = async (color: string) => {
+    if (!id || !productId) return;
+
+    try {
+      setLoadingVariant(true);
+      const variants = await ecommerceMerchantsService.getProductVariants(
+        id,
+        productId
+      );
+
+      // Find variant that has this color in its colorList
+      const matchingVariant = variants.find(
+        (v) => v.colorList && v.colorList.length > 0 && v.colorList[0] === color
+      );
+
+      if (matchingVariant) {
+        console.log("✅ Found variant for color:", color, matchingVariant);
+        setSelectedVariant(matchingVariant);
+      } else {
+        console.log(
+          "⚠️ No variant found for color:",
+          color,
+          "- using base product"
+        );
+        setSelectedVariant(null);
+      }
+    } catch (error) {
+      console.error("Error loading variant:", error);
+      setSelectedVariant(null);
+    } finally {
+      setLoadingVariant(false);
+    }
+  };
+
+  const handleColorSelect = async (color: string) => {
+    setSelectedColor(color);
+    await loadVariantForColor(color);
+  };
+
+  const handleVariantSelect = (variant: ProductVariant | null) => {
     setSelectedVariant(variant);
-  };
-
-  // Get current display data - variant takes precedence if selected
-  const getCurrentData = () => {
-    return selectedVariant || product;
-  };
-
-  const getCurrentImages = () => {
-    return getCurrentData()?.imageUrls || [];
   };
 
   if (loading) {
@@ -93,8 +132,9 @@ export default function ProductDetailsPage() {
     return null;
   }
 
-  const images = getCurrentImages();
-  const currentData = getCurrentData();
+  // Calculate current data - variant takes precedence if selected, otherwise use product
+  const currentData = selectedVariant || product;
+  const images = currentData?.imageUrls || [];
   const hasColorList = product.colorList && product.colorList.length > 0;
 
   return (
@@ -160,6 +200,12 @@ export default function ProductDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {loadingVariant && (
+                <div className="text-sm text-muted-foreground">
+                  Loading variant data...
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Price</p>
@@ -175,10 +221,12 @@ export default function ProductDetailsPage() {
                 </div>
               </div>
 
-              {currentData?.color && (
+              {selectedColor && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Color</p>
-                  <p className="font-medium capitalize">{currentData.color}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Selected Color
+                  </p>
+                  <p className="font-medium capitalize">{selectedColor}</p>
                 </div>
               )}
 
@@ -206,17 +254,56 @@ export default function ProductDetailsPage() {
             </CardContent>
           </Card>
 
-          {/* Variants Section */}
-          {product.hasVariants && variants.length > 0 && (
+          {/* Color Selection - Based on Product's colorList */}
+          {product.hasVariants && hasColorList && (
             <Card>
               <CardHeader>
-                <CardTitle>
-                  {hasColorList ? "Select Color" : "Select Variant"}
-                </CardTitle>
+                <CardTitle>Select Color</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {variants.map((variant, idx) => (
+                  {product.colorList!.map((color, idx) => (
+                    <Button
+                      key={idx}
+                      variant={selectedColor === color ? "default" : "outline"}
+                      onClick={() => handleColorSelect(color)}
+                      className="flex flex-col items-start h-auto p-3"
+                      disabled={loadingVariant}
+                    >
+                      <span className="font-semibold capitalize">{color}</span>
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Variant Selection - Based on Variant Names (no colorList) */}
+          {product.hasVariants && !hasColorList && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Select Variant</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {/* Base Product Button */}
+                  <Button
+                    variant={!selectedVariant ? "default" : "outline"}
+                    onClick={() => handleVariantSelect(null)}
+                    className="flex flex-col items-start h-auto p-3"
+                  >
+                    <span className="font-semibold">
+                      {product.name || "Base Product"}
+                    </span>
+                    {product.price && (
+                      <span className="text-xs">
+                        ₦{product.price.toLocaleString()}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* Variant Buttons */}
+                  {allVariants.map((variant, idx) => (
                     <Button
                       key={variant.id || idx}
                       variant={
@@ -228,9 +315,7 @@ export default function ProductDetailsPage() {
                       className="flex flex-col items-start h-auto p-3"
                     >
                       <span className="font-semibold">
-                        {hasColorList
-                          ? variant.color || `Color ${idx + 1}`
-                          : variant.name || `Variant ${idx + 1}`}
+                        {variant.name || `Variant ${idx + 1}`}
                       </span>
                       {variant.price && (
                         <span className="text-xs">
