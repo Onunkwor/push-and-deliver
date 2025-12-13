@@ -94,7 +94,6 @@ export default function MerchantProductsPage() {
                   <TableHead>Image</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead>Colors</TableHead>
                   <TableHead>Has Variants</TableHead>
                 </TableRow>
               </TableHeader>
@@ -135,30 +134,6 @@ export default function MerchantProductsPage() {
                       </TableCell>
                       <TableCell className="max-w-md">
                         {product.description || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {product.colorList && product.colorList.length > 0 ? (
-                          <div className="flex gap-1">
-                            {product.colorList.slice(0, 3).map((color, idx) => (
-                              <Badge
-                                key={idx}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {color}
-                              </Badge>
-                            ))}
-                            {product.colorList.length > 3 && (
-                              <Badge variant="secondary" className="text-xs">
-                                +{product.colorList.length - 3}
-                              </Badge>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">
-                            {product.color || "N/A"}
-                          </span>
-                        )}
                       </TableCell>
                       <TableCell>
                         <Badge

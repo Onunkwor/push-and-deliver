@@ -256,7 +256,6 @@ export default function EcommerceMerchantsPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuItem
                                   onClick={() =>
                                     handleViewDetails(merchant.id!)
