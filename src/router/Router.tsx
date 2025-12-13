@@ -24,6 +24,8 @@ import EcommerceMerchantDetailsPage from "@/pages/ecommerce-merchants/details";
 import MerchantProductsPage from "@/pages/ecommerce-merchants/products";
 import ProductDetailsPage from "@/pages/ecommerce-merchants/product-details";
 import MerchantTransactionsPage from "@/pages/ecommerce-merchants/transactions";
+import ProductOrdersPage from "@/pages/product-orders";
+import ProductOrderDetailsPage from "@/pages/product-orders/details";
 import WithdrawalsPage from "@/pages/withdrawals";
 import SignInPage from "@/pages/auth/sign-in";
 import SignUpPage from "@/pages/auth/sign-up";
@@ -120,6 +122,14 @@ function Router() {
                   <Route
                     path="/ride-hailing/:id"
                     element={<RideHailingDetailsPage />}
+                  />
+                  <Route
+                    path="/product-orders"
+                    element={<ProductOrdersPage />}
+                  />
+                  <Route
+                    path="/product-orders/:id"
+                    element={<ProductOrderDetailsPage />}
                   />
                   <Route
                     path="*"

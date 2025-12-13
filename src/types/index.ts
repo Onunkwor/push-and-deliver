@@ -543,4 +543,106 @@ export interface LGA {
   deliveryfee: number;
 }
 
+// Product Orders
+export const OrderStatus = {
+  Pending: 0,
+  Assigned: 1,
+  PickedUp: 2,
+  OutForDelivery: 3,
+  Delivered: 4,
+} as const;
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus];
+
+export interface OrderItem {
+  // Product/Variant fields
+  id?: string;
+  productId?: string;
+  variantId?: string;
+  name?: string;
+  category?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
+
+  // Selection
+  qty?: number;
+  price?: number;
+  subtotal?: number;
+  selectedColor?: string;
+  selectedSize?: string;
+
+  // Variant details
+  color?: string | null;
+  colorList?: string[];
+  sizeList?: string[];
+  stock?: number;
+  hasVariants?: boolean;
+  description?: string;
+  isPublished?: string;
+
+  // Vendor
+  vendorId?: string;
+  vendorName?: string;
+  vendorLocation?: {
+    geohash?: string;
+    geopoint?: GeoPoint;
+  };
+
+  createdAt?: Timestamp | Date;
+  updatedAt?: Timestamp | Date;
+}
+
+export interface ProductOrder {
+  id?: string;
+  orderId?: string;
+
+  // Customer
+  userId?: string;
+  customerName?: string;
+  customerPhoneNumber?: string;
+
+  // Delivery
+  deliveryaddress?: string;
+  deliverylocation?: {
+    geohash?: string;
+    geopoint?: GeoPoint;
+  };
+  lga?: string;
+  state?: string;
+  deliveryFee?: number;
+
+  // Order items
+  orderItems?: OrderItem[];
+  total?: number;
+  ispaid?: boolean;
+
+  // Vendor
+  vendorId?: string;
+  vendorName?: string;
+  vendorAddress?: string;
+  vendorLocation?: {
+    geohash?: string;
+    geopoint?: GeoPoint;
+  };
+
+  // Rider
+  riderid?: string;
+  ridername?: string;
+  riderphonenumber?: string;
+
+  // Status
+  orderstatus?: OrderStatus;
+  statusTimeline?: Array<{
+    status: OrderStatus;
+    timestamp: Timestamp | Date;
+  }>;
+
+  // Misc
+  otp?: number;
+  declinelist?: string[];
+  riderPayoutProcessed?: boolean;
+  vendorPayoutProcessed?: boolean;
+
+  createdAt?: Timestamp | Date;
+}
+
 export * from "./export-rates";
