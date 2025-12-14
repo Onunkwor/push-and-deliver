@@ -27,12 +27,12 @@ import MerchantTransactionsPage from "@/pages/ecommerce-merchants/transactions";
 import ProductOrdersPage from "@/pages/product-orders";
 import ProductOrderDetailsPage from "@/pages/product-orders/details";
 import WithdrawalsPage from "@/pages/withdrawals";
-import SignInPage from "@/pages/auth/sign-in";
-import SignUpPage from "@/pages/auth/sign-up";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoutes from "./ProtectedRoutes";
 
 import PublicRoute from "./PublicRoute";
+import SignInPage from "@/pages/Auth/sign-in";
+import SignUpPage from "@/pages/Auth/sign-up";
 
 function Router() {
   return (
