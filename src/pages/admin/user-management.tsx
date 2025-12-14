@@ -247,7 +247,7 @@ export default function UserManagementPage() {
                           </SelectContent>
                         </Select>
 
-                        <Dialog
+                        {/* <Dialog
                           open={userToDelete === user.id}
                           onOpenChange={(open) =>
                             !open && setUserToDelete(null)
@@ -288,7 +288,7 @@ export default function UserManagementPage() {
                               </Button>
                             </DialogFooter>
                           </DialogContent>
-                        </Dialog>
+                        </Dialog> */}
                       </div>
                     </TableCell>
                   </TableRow>
