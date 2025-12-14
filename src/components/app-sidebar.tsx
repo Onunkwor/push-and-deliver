@@ -138,6 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       "Shipment Orders",
       "Ride Hailing",
       "Coupons",
+      "Product Orders",
     ];
     navItems = navItems.filter((item) => allowedTitles.includes(item.title));
   } else if (adminType === "super") {
