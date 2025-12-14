@@ -76,7 +76,7 @@ export default function UserManagementPage() {
     try {
       let updates: Partial<User> = {};
       if (value === "user") {
-        updates = { isAdmin: false, adminType: undefined };
+        updates = { isAdmin: false, adminType: "" };
       } else {
         updates = {
           isAdmin: true,

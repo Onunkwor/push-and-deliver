@@ -108,7 +108,7 @@ export interface User {
   createdAt?: Timestamp | Date;
   updatedAt?: Timestamp | Date;
   isAdmin?: boolean;
-  adminType?: "super" | "regular" | "customercare";
+  adminType?: "super" | "regular" | "customercare" | "";
 }
 
 export interface Restaurant {
