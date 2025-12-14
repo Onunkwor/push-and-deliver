@@ -8,29 +8,32 @@ import {
   query,
   where,
   orderBy,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Rider } from '@/types';
-import { VerificationStatus } from '@/types';
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { Rider } from "@/types";
+import { VerificationStatus } from "@/types";
 
-const COLLECTION_NAME = 'Riders';
+const COLLECTION_NAME = "Riders";
 
 export const ridersService = {
   // Read all riders
   async getAllRiders(): Promise<Rider[]> {
     try {
-      const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        orderBy("createdAt", "desc")
+      );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.(),
         updatedAt: doc.data().updatedAt?.toDate?.(),
       })) as Rider[];
     } catch (error) {
-      console.error('Error fetching riders:', error);
+      console.error("Error fetching riders:", error);
       throw error;
     }
   },
@@ -40,19 +43,19 @@ export const ridersService = {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
-        where('verificationStatus', '==', VerificationStatus.verified),
-        orderBy('createdAt', 'desc')
+        where("verificationStatus", "==", VerificationStatus.verified),
+        orderBy("createdAt", "desc")
       );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.(),
         updatedAt: doc.data().updatedAt?.toDate?.(),
       })) as Rider[];
     } catch (error) {
-      console.error('Error fetching verified riders:', error);
+      console.error("Error fetching verified riders:", error);
       throw error;
     }
   },
@@ -62,19 +65,19 @@ export const ridersService = {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
-        where('verificationStatus', '==', VerificationStatus.unverified),
-        orderBy('createdAt', 'desc')
+        where("verificationStatus", "==", VerificationStatus.unverified),
+        orderBy("createdAt", "desc")
       );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.(),
         updatedAt: doc.data().updatedAt?.toDate?.(),
       })) as Rider[];
     } catch (error) {
-      console.error('Error fetching pending riders:', error);
+      console.error("Error fetching pending riders:", error);
       throw error;
     }
   },
@@ -84,19 +87,19 @@ export const ridersService = {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
-        where('verificationStatus', '==', VerificationStatus.blocked),
-        orderBy('createdAt', 'desc')
+        where("verificationStatus", "==", VerificationStatus.blocked),
+        orderBy("createdAt", "desc")
       );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate?.(),
         updatedAt: doc.data().updatedAt?.toDate?.(),
       })) as Rider[];
     } catch (error) {
-      console.error('Error fetching blocked riders:', error);
+      console.error("Error fetching blocked riders:", error);
       throw error;
     }
   },
@@ -118,7 +121,7 @@ export const ridersService = {
 
       return null;
     } catch (error) {
-      console.error('Error fetching rider:', error);
+      console.error("Error fetching rider:", error);
       throw error;
     }
   },
@@ -132,7 +135,7 @@ export const ridersService = {
         updatedAt: Timestamp.fromDate(new Date()),
       });
     } catch (error) {
-      console.error('Error verifying rider:', error);
+      console.error("Error verifying rider:", error);
       throw error;
     }
   },
@@ -146,7 +149,7 @@ export const ridersService = {
         updatedAt: Timestamp.fromDate(new Date()),
       });
     } catch (error) {
-      console.error('Error blocking rider:', error);
+      console.error("Error blocking rider:", error);
       throw error;
     }
   },
@@ -160,13 +163,16 @@ export const ridersService = {
         updatedAt: Timestamp.fromDate(new Date()),
       });
     } catch (error) {
-      console.error('Error unblocking rider:', error);
+      console.error("Error unblocking rider:", error);
       throw error;
     }
   },
 
   // Update rider information
-  async updateRider(id: string, riderData: Partial<Omit<Rider, 'id' | 'createdAt'>>): Promise<void> {
+  async updateRider(
+    id: string,
+    riderData: Partial<Omit<Rider, "id" | "createdAt">>
+  ): Promise<void> {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
       await updateDoc(docRef, {
@@ -174,7 +180,97 @@ export const ridersService = {
         updatedAt: Timestamp.fromDate(new Date()),
       });
     } catch (error) {
-      console.error('Error updating rider:', error);
+      console.error("Error updating rider:", error);
+      throw error;
+    }
+  },
+
+  // Update car picture URL
+  async updateCarPicture(id: string, carPictureUrl: string): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        carPictureUrl,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error updating car picture:", error);
+      throw error;
+    }
+  },
+
+  // Update plate number picture URL
+  async updatePlateNumberPicture(
+    id: string,
+    plateNumberPictureUrl: string
+  ): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        plateNumberPictureUrl,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error updating plate number picture:", error);
+      throw error;
+    }
+  },
+
+  // Update driver's license picture URL
+  async updateDriverLicensePicture(
+    id: string,
+    driverLicensePictureUrl: string
+  ): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        driverLicensePictureUrl,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error updating driver license picture:", error);
+      throw error;
+    }
+  },
+
+  // Delete car picture
+  async deleteCarPicture(id: string): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        carPictureUrl: null,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error deleting car picture:", error);
+      throw error;
+    }
+  },
+
+  // Delete plate number picture
+  async deletePlateNumberPicture(id: string): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        plateNumberPictureUrl: null,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error deleting plate number picture:", error);
+      throw error;
+    }
+  },
+
+  // Delete driver's license picture
+  async deleteDriverLicensePicture(id: string): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        driverLicensePictureUrl: null,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error deleting driver license picture:", error);
       throw error;
     }
   },

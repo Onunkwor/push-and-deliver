@@ -36,10 +36,13 @@ import type { Rider, Transaction } from "@/types";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
+import { ref, deleteObject } from "firebase/storage";
 import { getStatusLabel, getStatusBadgeVariant } from "@/lib/status-utils";
 import { VerificationStatus } from "@/types";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/contexts/UserContext";
+import { ImageUploadCard } from "@/components/ImageUploadCard";
 
 const formatAmount = (amount: number) => {
   return amount.toLocaleString("en-US", {
@@ -48,7 +51,7 @@ const formatAmount = (amount: number) => {
   });
 };
 
-const getVerificationStatusLabel = (status: string | undefined) => {
+const getVerificationStatusLabel = (status: number | undefined) => {
   switch (status) {
     case VerificationStatus.verified:
       return "Verified";
@@ -63,7 +66,7 @@ const getVerificationStatusLabel = (status: string | undefined) => {
   }
 };
 
-const getVerificationBadgeVariant = (status: string | undefined) => {
+const getVerificationBadgeVariant = (status: number | undefined) => {
   switch (status) {
     case VerificationStatus.verified:
       return "default";
@@ -79,13 +82,15 @@ const getVerificationBadgeVariant = (status: string | undefined) => {
 export default function RiderDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user: currentAdmin } = useCurrentUser();
+  const isSuperAdmin = currentAdmin?.adminType === "super";
   const [rider, setRider] = useState<Rider | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newVerificationStatus, setNewVerificationStatus] =
-    useState<string>("");
+    useState<VerificationStatus>(VerificationStatus.unverified);
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -140,6 +145,7 @@ export default function RiderDetailsPage() {
   };
 
   const handleEditClick = () => {
+    console.log(rider?.verificationStatus);
     setNewVerificationStatus(
       rider?.verificationStatus || VerificationStatus.unverified
     );
@@ -263,23 +269,35 @@ export default function RiderDetailsPage() {
                       <div className="grid gap-2">
                         <Label htmlFor="status">Verification Status</Label>
                         <Select
-                          value={newVerificationStatus}
-                          onValueChange={setNewVerificationStatus}
+                          value={String(newVerificationStatus)}
+                          onValueChange={(value) =>
+                            setNewVerificationStatus(
+                              Number(value) as VerificationStatus
+                            )
+                          }
                         >
                           <SelectTrigger id="status">
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={VerificationStatus.verified}>
+                            <SelectItem
+                              value={String(VerificationStatus.verified)}
+                            >
                               Verified
                             </SelectItem>
-                            <SelectItem value={VerificationStatus.unverified}>
+                            <SelectItem
+                              value={String(VerificationStatus.unverified)}
+                            >
                               Unverified
                             </SelectItem>
-                            <SelectItem value={VerificationStatus.blocked}>
+                            <SelectItem
+                              value={String(VerificationStatus.blocked)}
+                            >
                               Blocked
                             </SelectItem>
-                            <SelectItem value={VerificationStatus.deleted}>
+                            <SelectItem
+                              value={String(VerificationStatus.deleted)}
+                            >
                               Deleted
                             </SelectItem>
                           </SelectContent>
@@ -352,6 +370,134 @@ export default function RiderDetailsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Verification Images - Only for Super Admin */}
+      {isSuperAdmin && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Verification Images</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            <ImageUploadCard
+              title="Car Picture"
+              description="Upload a clear photo of the rider's vehicle"
+              imageUrl={rider.carPictureUrl}
+              riderId={rider.id!}
+              imageType="car"
+              onUploadComplete={async (url) => {
+                try {
+                  await ridersService.updateCarPicture(rider.id!, url);
+                  setRider({ ...rider, carPictureUrl: url });
+                  toast.success("Car picture uploaded successfully");
+                } catch (error) {
+                  console.error("Error saving car picture:", error);
+                  toast.error("Failed to save car picture");
+                }
+              }}
+              onDeleteComplete={async () => {
+                try {
+                  // Delete from Firebase Storage first
+                  if (rider.carPictureUrl) {
+                    const storageRef = ref(storage, rider.carPictureUrl);
+                    await deleteObject(storageRef);
+                  }
+
+                  // Then update Firestore to set URL to null
+                  await ridersService.deleteCarPicture(rider.id!);
+
+                  // Update local state
+                  setRider({ ...rider, carPictureUrl: null });
+                  toast.success("Car picture deleted successfully");
+                } catch (error) {
+                  console.error("Error deleting car picture:", error);
+                  toast.error("Failed to delete car picture");
+                }
+              }}
+            />
+
+            <ImageUploadCard
+              title="Plate Number Picture"
+              description="Upload a clear photo of the vehicle's plate number"
+              imageUrl={rider.plateNumberPictureUrl}
+              riderId={rider.id!}
+              imageType="plateNumber"
+              onUploadComplete={async (url) => {
+                try {
+                  await ridersService.updatePlateNumberPicture(rider.id!, url);
+                  setRider({ ...rider, plateNumberPictureUrl: url });
+                  toast.success("Plate number picture uploaded successfully");
+                } catch (error) {
+                  console.error("Error saving plate number picture:", error);
+                  toast.error("Failed to save plate number picture");
+                }
+              }}
+              onDeleteComplete={async () => {
+                try {
+                  // Delete from Firebase Storage first
+                  if (rider.plateNumberPictureUrl) {
+                    const storageRef = ref(
+                      storage,
+                      rider.plateNumberPictureUrl
+                    );
+                    await deleteObject(storageRef);
+                  }
+
+                  // Then update Firestore to set URL to null
+                  await ridersService.deletePlateNumberPicture(rider.id!);
+
+                  // Update local state
+                  setRider({ ...rider, plateNumberPictureUrl: null });
+                  toast.success("Plate number picture deleted successfully");
+                } catch (error) {
+                  console.error("Error deleting plate number picture:", error);
+                  toast.error("Failed to delete plate number picture");
+                }
+              }}
+            />
+
+            <ImageUploadCard
+              title="Driver's License"
+              description="Upload a clear photo of the rider's driver's license"
+              imageUrl={rider.driverLicensePictureUrl}
+              riderId={rider.id!}
+              imageType="driverLicense"
+              onUploadComplete={async (url) => {
+                try {
+                  await ridersService.updateDriverLicensePicture(
+                    rider.id!,
+                    url
+                  );
+                  setRider({ ...rider, driverLicensePictureUrl: url });
+                  toast.success("Driver's license uploaded successfully");
+                } catch (error) {
+                  console.error("Error saving driver's license:", error);
+                  toast.error("Failed to save driver's license");
+                }
+              }}
+              onDeleteComplete={async () => {
+                try {
+                  // Delete from Firebase Storage first
+                  if (rider.driverLicensePictureUrl) {
+                    const storageRef = ref(
+                      storage,
+                      rider.driverLicensePictureUrl
+                    );
+                    await deleteObject(storageRef);
+                  }
+
+                  // Then update Firestore to set URL to null
+                  await ridersService.deleteDriverLicensePicture(rider.id!);
+
+                  // Update local state
+                  setRider({ ...rider, driverLicensePictureUrl: null });
+                  toast.success("Driver's license deleted successfully");
+                } catch (error) {
+                  console.error("Error deleting driver's license:", error);
+                  toast.error("Failed to delete driver's license");
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Wallet & Bank Information */}
       <Card>

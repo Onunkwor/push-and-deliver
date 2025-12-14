@@ -10,10 +10,10 @@ export const VehicleType = {
 export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType];
 
 export const VerificationStatus = {
-  unverified: "unverified",
-  verified: "verified",
-  blocked: "blocked",
-  deleted: "deleted",
+  unverified: 0,
+  verified: 1,
+  blocked: 2,
+  deleted: 3,
 } as const;
 export type VerificationStatus =
   (typeof VerificationStatus)[keyof typeof VerificationStatus];
@@ -82,6 +82,10 @@ export interface Rider {
   walletbalance?: number;
   createdAt?: Timestamp | Date;
   updatedAt?: Timestamp | Date;
+  // Verification images
+  carPictureUrl?: string | null;
+  plateNumberPictureUrl?: string | null;
+  driverLicensePictureUrl?: string | null;
 }
 
 export interface User {
