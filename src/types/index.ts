@@ -338,10 +338,12 @@ export interface ShipmentOrder {
   dropoffAddress?: string;
   dropoffLocation?: ShipmentLocation;
   heightinCM?: number;
+  invoiceUrl?: string | null;
   ispaid?: boolean;
   itemType?: string;
   itemvalue?: number;
   orderStatus?: number;
+  packingListUrl?: string | null;
   paymentType?: number; // 0 = wallet, 1 = cash
   pndofficeaddress?: string;
   pndofficelocation?: ShipmentLocation;

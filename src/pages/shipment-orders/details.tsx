@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,26 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  IconMapPin,
-  IconPackage,
-  IconTruck,
-  IconBuilding,
-  IconScale,
-  IconRuler,
-  IconUser,
-  IconCash,
-  IconWallet,
-  IconArrowLeft,
-  IconFileTypePdf,
-  IconExternalLink,
-} from "@tabler/icons-react";
-import { shipmentOrdersService } from "@/services/shipment-orders.service";
 import {
   Select,
   SelectContent,
@@ -34,16 +16,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { useCurrentUser } from "@/contexts/UserContext";
+import { shipmentOrdersService } from "@/services/shipment-orders.service";
 import {
   IntlShipmentType,
   ShipmentCustomClearanceType,
   ShipmentOrderStatus,
   type ShipmentOrder,
 } from "@/types";
-import { toast } from "sonner";
 import { Separator } from "@radix-ui/react-separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useCurrentUser } from "@/contexts/UserContext";
+import {
+  IconArrowLeft,
+  IconBuilding,
+  IconCash,
+  IconExternalLink,
+  IconFileTypePdf,
+  IconMapPin,
+  IconPackage,
+  IconRuler,
+  IconScale,
+  IconTruck,
+  IconUser,
+  IconWallet,
+} from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function ShipmentOrderDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -390,7 +390,7 @@ export default function ShipmentOrderDetailsPage() {
               </CardHeader>
               <CardContent>
                 {documentIsPDF ? (
-                  // PDF Display - Clickable card
+                  // PDF Display - View only
                   <a
                     href={order.clearancedocument}
                     target="_blank"
@@ -424,6 +424,103 @@ export default function ShipmentOrderDetailsPage() {
             </Card>
           );
         })()}
+
+      {/* Optional Documents (Packing List & Invoice) - View Only */}
+      {isCustomClearance && (order.packingListUrl || order.invoiceUrl) && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Packing List - View Only */}
+          {order.packingListUrl &&
+            (() => {
+              const isPDF =
+                order.packingListUrl.toLowerCase().includes(".pdf") ||
+                order.packingListUrl.toLowerCase().includes("pdf?");
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Packing List</CardTitle>
+                    <CardDescription>
+                      View the packing list document for this shipment
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <a
+                      href={order.packingListUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <div className="flex items-center gap-4 p-6 border-2 border-dashed rounded-lg hover:border-primary hover:bg-accent/50 transition-colors cursor-pointer group">
+                        <div className="flex-shrink-0">
+                          {isPDF ? (
+                            <IconFileTypePdf className="h-16 w-16 text-red-500" />
+                          ) : (
+                            <IconFileTypePdf className="h-16 w-16 text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                            Packing List ({isPDF ? "PDF" : "Image"})
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Click to view document in new tab
+                          </p>
+                        </div>
+                        <IconExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    </a>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
+          {/* Invoice - View Only */}
+          {order.invoiceUrl &&
+            (() => {
+              const isPDF =
+                order.invoiceUrl.toLowerCase().includes(".pdf") ||
+                order.invoiceUrl.toLowerCase().includes("pdf?");
+
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Invoice</CardTitle>
+                    <CardDescription>
+                      View the invoice document for this shipment
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <a
+                      href={order.invoiceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <div className="flex items-center gap-4 p-6 border-2 border-dashed rounded-lg hover:border-primary hover:bg-accent/50 transition-colors cursor-pointer group">
+                        <div className="flex-shrink-0">
+                          {isPDF ? (
+                            <IconFileTypePdf className="h-16 w-16 text-red-500" />
+                          ) : (
+                            <IconFileTypePdf className="h-16 w-16 text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                            Invoice ({isPDF ? "PDF" : "Image"})
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Click to view document in new tab
+                          </p>
+                        </div>
+                        <IconExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    </a>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+        </div>
+      )}
 
       {/* Locations */}
       <div className="grid gap-4 md:grid-cols-3">
