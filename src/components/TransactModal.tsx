@@ -31,7 +31,7 @@ interface TransactModalProps {
 }
 
 export function TransactModal({ open, onOpenChange }: TransactModalProps) {
-  const { user: currentAdmin } = useCurrentUser();
+  const { user: currentAdmin, refetchUser } = useCurrentUser();
   const [recipientType, setRecipientType] = useState<"user" | "rider">("user");
   const [users, setUsers] = useState<User[]>([]);
   const [riders, setRiders] = useState<Rider[]>([]);
@@ -114,6 +114,10 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
       });
 
       toast.success("Transaction completed successfully");
+
+      // Refetch user data to update wallet balance
+      await refetchUser();
+
       onOpenChange(false);
 
       // Reset form
