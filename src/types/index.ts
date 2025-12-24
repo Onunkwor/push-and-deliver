@@ -13,7 +13,6 @@ export const VerificationStatus = {
   unverified: 0,
   verified: 1,
   blocked: 2,
-  deleted: 3,
 } as const;
 export type VerificationStatus =
   (typeof VerificationStatus)[keyof typeof VerificationStatus];

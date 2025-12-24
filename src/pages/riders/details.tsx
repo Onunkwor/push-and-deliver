@@ -59,8 +59,6 @@ const getVerificationStatusLabel = (status: number | undefined) => {
       return "Unverified";
     case VerificationStatus.blocked:
       return "Blocked";
-    case VerificationStatus.deleted:
-      return "Deleted";
     default:
       return "Unverified";
   }
@@ -71,8 +69,6 @@ const getVerificationBadgeVariant = (status: number | undefined) => {
     case VerificationStatus.verified:
       return "default";
     case VerificationStatus.blocked:
-      return "destructive";
-    case VerificationStatus.deleted:
       return "destructive";
     default:
       return "secondary";
@@ -294,11 +290,6 @@ export default function RiderDetailsPage() {
                               value={String(VerificationStatus.blocked)}
                             >
                               Blocked
-                            </SelectItem>
-                            <SelectItem
-                              value={String(VerificationStatus.deleted)}
-                            >
-                              Deleted
                             </SelectItem>
                           </SelectContent>
                         </Select>
