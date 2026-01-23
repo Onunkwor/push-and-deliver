@@ -177,7 +177,7 @@ export default function SupportTicketsPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between w-full mt-1">
-                  <span className="text-sm truncate text-foreground/90 font-medium w-1/3 truncate">
+                  <span className="text-sm text-foreground/90 font-medium w-1/3 truncate">
                     {ticket.lastMessage || "No messages"}
                   </span>
                 </div>
