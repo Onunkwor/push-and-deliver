@@ -86,6 +86,19 @@ export interface Rider {
   carPictureUrl?: string | null;
   plateNumberPictureUrl?: string | null;
   driverLicensePictureUrl?: string | null;
+  // NIN/BVN Verification
+  ninVerified?: boolean;
+  bvnVerified?: boolean;
+  monoVerificationData?: {
+    type: "NIN" | "BVN";
+    verifiedAt?: Date;
+    verifiedBy?: string;
+    firstName?: string;
+    lastName?: string;
+    middleName?: string;
+    dateOfBirth?: string;
+    phoneNumber?: string;
+  };
 }
 
 export interface User {
@@ -108,7 +121,7 @@ export interface User {
   createdAt?: Timestamp | Date;
   updatedAt?: Timestamp | Date;
   isAdmin?: boolean;
-  adminType?: "super" | "regular" | "customercare" | "";
+  adminType?: "super" | "regular" | "customercare" | "verifier" | "";
 }
 
 export interface Restaurant {
@@ -206,6 +219,21 @@ export interface Coupon {
   createdAt?: Timestamp | Date;
   isActive: boolean;
   percentageDiscount: number;
+}
+
+export interface GeneralNotification {
+  id?: string;
+  title: string;
+  body: string;
+  userType: "users" | "riders" | "restaurants" | "merchants";
+  createdAt?: Timestamp | Date;
+  createdBy?: string;
+}
+
+export interface DHLZone {
+  code: string;
+  country: string;
+  zone: number;
 }
 
 export interface TicketMessage {
@@ -344,7 +372,8 @@ export interface ShipmentOrder {
   heightinCM?: number;
   invoiceUrl?: string | null;
   ispaid?: boolean;
-  itemType?: string;
+  itemType?: string | string[]; // Can be a single string or array of strings
+  itemImage?: string; // Item image URL if exists
   itemvalue?: number;
   orderStatus?: number;
   packingListUrl?: string | null;
@@ -650,6 +679,16 @@ export interface ProductOrder {
   vendorPayoutProcessed?: boolean;
 
   createdAt?: Timestamp | Date;
+}
+
+export interface AppConfig {
+  id?: string;
+  app?: string; // "user" | "rider" etc.
+  platform?: string; // "iOS" | "Android"
+  appversion?: string;
+  forceupdate?: boolean;
+  isActive?: boolean;
+  signupbonusamount?: number;
 }
 
 export * from "./export-rates";

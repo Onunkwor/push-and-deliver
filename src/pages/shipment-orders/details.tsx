@@ -576,42 +576,69 @@ export default function ShipmentOrderDetailsPage() {
               Item Details
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Item Type</span>
-                <span className="text-sm font-medium">
-                  {order.itemType || "Not specified"}
-                </span>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <span className="text-sm text-muted-foreground">Item Type</span>
+                  <div className="flex flex-wrap gap-1">
+                    {order.itemType ? (
+                      Array.isArray(order.itemType) ? (
+                        order.itemType.map((type, idx) => (
+                          <Badge key={idx} variant="secondary">
+                            {type}
+                          </Badge>
+                        ))
+                      ) : (
+                        <Badge variant="secondary">{order.itemType}</Badge>
+                      )
+                    ) : (
+                      <span className="text-sm font-medium">Not specified</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    Item Value
+                  </span>
+                  <span className="text-sm font-medium">
+                    ₦{(order.itemvalue || 0).toLocaleString()}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Item Value
-                </span>
-                <span className="text-sm font-medium">
-                  ₦{(order.itemvalue || 0).toLocaleString()}
-                </span>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <IconScale className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Weight:</span>
+                  <span className="text-sm font-medium">
+                    {order.weightinKG || 0} KG
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <IconRuler className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    Dimensions:
+                  </span>
+                  <span className="text-sm font-medium">
+                    {order.widthinCM || 0}W × {order.heightinCM || 0}H ×{" "}
+                    {order.breadthinCM || 0}B cm
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <IconScale className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Weight:</span>
-                <span className="text-sm font-medium">
-                  {order.weightinKG || 0} KG
+            {/* Item Image */}
+            {order.itemImage && (
+              <div className="pt-4 border-t">
+                <span className="text-sm text-muted-foreground block mb-2">
+                  Item Image
                 </span>
+                <img
+                  src={order.itemImage}
+                  alt="Item"
+                  className="rounded-lg max-w-full max-h-[300px] w-auto object-contain border"
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <IconRuler className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  Dimensions:
-                </span>
-                <span className="text-sm font-medium">
-                  {order.widthinCM || 0}W × {order.heightinCM || 0}H ×{" "}
-                  {order.breadthinCM || 0}B cm
-                </span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       )}

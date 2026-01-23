@@ -80,7 +80,7 @@ export default function UserManagementPage() {
       } else {
         updates = {
           isAdmin: true,
-          adminType: value as "super" | "regular" | "customercare",
+          adminType: value as "super" | "regular" | "customercare" | "verifier",
         };
       }
 
@@ -243,6 +243,9 @@ export default function UserManagementPage() {
                             </SelectItem>
                             <SelectItem value="customercare">
                               Customer Care
+                            </SelectItem>
+                            <SelectItem value="verifier">
+                              Verifier
                             </SelectItem>
                           </SelectContent>
                         </Select>

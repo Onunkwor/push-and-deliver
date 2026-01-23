@@ -18,6 +18,8 @@ import { usersService } from '@/services/users.service'
 import type { Referral, User } from '@/types'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ExportButton } from '@/components/ExportButton'
+import { exportToCSV } from '@/lib/csv-export'
 
 export default function ReferralsPage() {
   const [referrals, setReferrals] = useState<Referral[]>([])
@@ -169,7 +171,7 @@ export default function ReferralsPage() {
           <CardDescription>View all referrers and their referred users</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Search */}
+          {/* Search and Export */}
           <div className="mb-6 flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
@@ -180,6 +182,28 @@ export default function ReferralsPage() {
                 className="pl-8"
               />
             </div>
+            <ExportButton
+              onClick={() => {
+                const exportData = filteredReferrers.map(r => ({
+                  referrerName: r.referrerName,
+                  referrerId: r.referrerId,
+                  referralCount: r.referralCount,
+                  status: r.referralCount > 5 ? 'Top Referrer' : 'Active',
+                }))
+                exportToCSV(
+                  exportData,
+                  [
+                    { header: 'Referrer Name', accessor: 'referrerName' },
+                    { header: 'Referrer ID', accessor: 'referrerId' },
+                    { header: 'Referral Count', accessor: 'referralCount' },
+                    { header: 'Status', accessor: 'status' },
+                  ],
+                  'referrals_export'
+                )
+                toast.success('Referrals exported successfully')
+              }}
+              disabled={filteredReferrers.length === 0}
+            />
           </div>
 
           {/* Table */}

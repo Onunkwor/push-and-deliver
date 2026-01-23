@@ -41,6 +41,8 @@ import type { Rider } from '@/types'
 import { VerificationStatus } from '@/types'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ExportButton } from '@/components/ExportButton'
+import { exportToCSV } from '@/lib/csv-export'
 
 const formatAmount = (amount: number) => {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -274,7 +276,7 @@ export default function RidersPage() {
           <CardDescription>View all riders with verification status and wallet information</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Search and Filter */}
+          {/* Search, Filter, and Export */}
           <div className="mb-6 flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
@@ -296,6 +298,27 @@ export default function RidersPage() {
                 <SelectItem value={VerificationStatus.blocked}>Blocked</SelectItem>
               </SelectContent>
             </Select>
+            <ExportButton
+              onClick={() => {
+                exportToCSV(
+                  filteredRiders,
+                  [
+                    { header: 'Full Name', accessor: 'fullname' },
+                    { header: 'Email', accessor: 'email' },
+                    { header: 'Phone', accessor: 'phonenumber' },
+                    { header: 'Vehicle Type', accessor: 'vehicleType' },
+                    { header: 'Vehicle Make', accessor: 'vehicleMakename' },
+                    { header: 'Plate Number', accessor: 'plateNumber' },
+                    { header: 'Status', accessor: (r: Rider) => getStatusLabel(r.verificationStatus) },
+                    { header: 'Online', accessor: (r: Rider) => r.onlineStatus ? 'Yes' : 'No' },
+                    { header: 'Wallet Balance', accessor: 'walletbalance' },
+                  ],
+                  'riders_export'
+                )
+                toast.success('Riders exported successfully')
+              }}
+              disabled={filteredRiders.length === 0}
+            />
           </div>
 
           {/* Table */}

@@ -6,15 +6,15 @@ import {
   useCallback,
 } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { usersService } from "@/services/users.service";
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import type { User } from "@/types";
 
 interface UserContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
-  adminType?: "super" | "regular" | "customercare";
+  adminType?: "super" | "regular" | "customercare" | "verifier";
   refetchUser: () => Promise<void>;
 }
 
@@ -32,18 +32,35 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserData = useCallback(async (uid: string) => {
     try {
-      const firestoreUser = await usersService.getUserById(uid);
-      if (firestoreUser) {
-        setUser(firestoreUser);
+      // Query Admin collection where userid field equals the Firebase Auth UID
+      const adminQuery = query(
+        collection(db, "Admin"),
+        where("userid", "==", uid),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(adminQuery);
+
+      if (!querySnapshot.empty) {
+        const adminDoc = querySnapshot.docs[0];
+        const adminData = adminDoc.data();
+        setUser({
+          id: adminDoc.id,
+          isAdmin: true,
+          adminType: adminData.adminType,
+          email: adminData.email,
+          username: adminData.username,
+          imageURL: adminData.imageURL,
+          ...adminData,
+        } as User);
       } else {
         console.warn(
-          "User authenticated but no Firestore document found for ID:",
+          "User authenticated but no Admin document found for userid:",
           uid
         );
         setUser(null);
       }
     } catch (error) {
-      console.error("Failed to load user profile:", error);
+      console.error("Failed to load admin profile:", error);
       setUser(null);
     }
   }, []);

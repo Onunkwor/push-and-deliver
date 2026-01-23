@@ -43,6 +43,8 @@ import { VerificationStatus } from "@/types";
 import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/contexts/UserContext";
 import { ImageUploadCard } from "@/components/ImageUploadCard";
+import { MonoVerificationDialog } from "@/components/MonoVerificationDialog";
+import { CardDescription } from "@/components/ui/card";
 
 const formatAmount = (amount: number) => {
   return amount.toLocaleString("en-US", {
@@ -84,6 +86,9 @@ export default function RiderDetailsPage() {
   const navigate = useNavigate();
   const { user: currentAdmin } = useCurrentUser();
   const isSuperAdmin = currentAdmin?.adminType === "super";
+  const canUploadDocuments =
+    currentAdmin?.adminType === "super" ||
+    currentAdmin?.adminType === "verifier";
   const [rider, setRider] = useState<Rider | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -371,8 +376,8 @@ export default function RiderDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Verification Images - Only for Super Admin */}
-      {isSuperAdmin && (
+      {/* Verification Images - For Super Admin and Verifiers */}
+      {canUploadDocuments && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Verification Images</h2>
           <div className="grid gap-4 md:grid-cols-3">
@@ -497,6 +502,49 @@ export default function RiderDetailsPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Identity Verification - For Super Admin and Verifiers */}
+      {canUploadDocuments && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Identity Verification</CardTitle>
+            <CardDescription>
+              Verify rider identity using NIN or BVN via Mono
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                {rider.ninVerified || rider.bvnVerified ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="bg-green-600">
+                      {rider.monoVerificationData?.type} Verified
+                    </Badge>
+                    {rider.monoVerificationData && (
+                      <span className="text-sm text-muted-foreground">
+                        {rider.monoVerificationData.firstName}{" "}
+                        {rider.monoVerificationData.lastName}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <Badge variant="secondary">Not Verified</Badge>
+                )}
+              </div>
+              <MonoVerificationDialog
+                riderId={rider.id!}
+                riderName={rider.fullname}
+                currentVerification={{
+                  ninVerified: rider.ninVerified,
+                  bvnVerified: rider.bvnVerified,
+                  monoVerificationData: rider.monoVerificationData,
+                }}
+                onVerificationComplete={loadRiderData}
+              />
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Wallet & Bank Information */}

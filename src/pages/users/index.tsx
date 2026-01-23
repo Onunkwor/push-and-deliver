@@ -19,6 +19,8 @@ import { referralsService } from '@/services/referrals.service'
 import type { User } from '@/types'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ExportButton } from '@/components/ExportButton'
+import { exportToCSV } from '@/lib/csv-export'
 import {
   ChartContainer,
   ChartTooltip,
@@ -412,7 +414,7 @@ export default function UsersPage() {
           <CardDescription>View all users with their wallet balances and referral counts</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Search */}
+          {/* Search and Export */}
           <div className="mb-6 flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
@@ -423,6 +425,26 @@ export default function UsersPage() {
                 className="pl-8"
               />
             </div>
+            <ExportButton
+              onClick={() => {
+                exportToCSV(
+                  filteredUsers,
+                  [
+                    { header: 'Username', accessor: 'username' },
+                    { header: 'Email', accessor: 'email' },
+                    { header: 'Phone', accessor: 'phonenumber' },
+                    { header: 'Wallet Balance', accessor: 'walletbalance' },
+                    { header: 'Referral Count', accessor: (u: User) => referralCounts.get(u.id!) || 0 },
+                    { header: 'Created At', accessor: (u: User) =>
+                      u.createdAt instanceof Date ? u.createdAt.toISOString().split('T')[0] : ''
+                    },
+                  ],
+                  'users_export'
+                )
+                toast.success('Users exported successfully')
+              }}
+              disabled={filteredUsers.length === 0}
+            />
           </div>
 
           {/* Table */}

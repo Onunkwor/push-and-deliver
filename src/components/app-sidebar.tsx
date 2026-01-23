@@ -1,4 +1,5 @@
 import {
+  IconBell,
   IconCar,
   IconCash,
   IconCoin,
@@ -13,12 +14,14 @@ import {
   IconPackage,
   IconPlane,
   IconReceipt,
+  IconSettings,
   IconShoppingBag,
   IconShoppingCart,
   IconTicket,
   IconTruckDelivery,
   IconUsers,
   IconUserShield,
+  IconWorld,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -117,6 +120,21 @@ const data = {
       url: "/product-orders",
       icon: IconShoppingCart,
     },
+    {
+      title: "General Notifications",
+      url: "/general-notifications",
+      icon: IconBell,
+    },
+    {
+      title: "DHL Zones",
+      url: "/dhl-zones",
+      icon: IconWorld,
+    },
+    {
+      title: "App Config",
+      url: "/app-config",
+      icon: IconSettings,
+    },
   ],
 };
 
@@ -140,6 +158,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       "Coupons",
       "Product Orders",
     ];
+    navItems = navItems.filter((item) => allowedTitles.includes(item.title));
+  } else if (adminType === "verifier") {
+    // Verifiers can only access Dashboard and Riders for document upload
+    const allowedTitles = ["Dashboard", "Riders"];
     navItems = navItems.filter((item) => allowedTitles.includes(item.title));
   } else if (adminType === "super") {
     // Add User Management for super admin

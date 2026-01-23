@@ -27,6 +27,9 @@ import MerchantTransactionsPage from "@/pages/ecommerce-merchants/transactions";
 import ProductOrdersPage from "@/pages/product-orders";
 import ProductOrderDetailsPage from "@/pages/product-orders/details";
 import WithdrawalsPage from "@/pages/withdrawals";
+import GeneralNotificationsPage from "@/pages/general-notifications";
+import DHLZonesPage from "@/pages/dhl-zones";
+import AppConfigPage from "@/pages/app-config";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoutes from "./ProtectedRoutes";
 
@@ -98,6 +101,12 @@ function Router() {
                   <Route path="/referrals" element={<ReferralsPage />} />
                   <Route path="/withdrawals" element={<WithdrawalsPage />} />
                   <Route path="/coupons" element={<CouponsPage />} />
+                  <Route
+                    path="/general-notifications"
+                    element={<GeneralNotificationsPage />}
+                  />
+                  <Route path="/dhl-zones" element={<DHLZonesPage />} />
+                  <Route path="/app-config" element={<AppConfigPage />} />
                   <Route
                     path="/support-tickets"
                     element={<SupportTicketsPage />}
