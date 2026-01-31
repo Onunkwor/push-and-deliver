@@ -140,4 +140,71 @@ export const transactionService = {
       throw new Error(error.message || "Transaction failed");
     }
   },
+
+  async debitMoney({
+    targetId,
+    targetType,
+    amount,
+    narration,
+  }: {
+    targetId: string;
+    targetType: "user" | "rider";
+    amount: number;
+    narration: string;
+  }): Promise<void> {
+    const trxRef = generateTrxRef(targetId);
+    const currentTime = Timestamp.now();
+
+    const targetCollection = targetType === "user" ? "Users" : "Riders";
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        // 1. Get target document
+        const targetRef = doc(db, targetCollection, targetId);
+        const targetDoc = await transaction.get(targetRef);
+
+        if (!targetDoc.exists()) {
+          throw new Error("Target user/rider not found");
+        }
+
+        const targetData = targetDoc.data();
+        const targetBalance = targetData.walletbalance || 0;
+
+        // 2. Validate target has sufficient balance
+        if (targetBalance < amount) {
+          throw new Error("Target has insufficient wallet balance");
+        }
+
+        // 3. Update wallet balance (debit target)
+        transaction.update(targetRef, {
+          walletbalance: targetBalance - amount,
+        });
+
+        // 4. Create debit transaction record for target
+        const targetTransactionRef = collection(
+          db,
+          targetCollection,
+          targetId,
+          "Transactions"
+        );
+        const targetTransactionData = {
+          amount: amount,
+          narration: narration,
+          status: 0, // TransactionStatus: success
+          time: currentTime,
+          transactionType: 1, // Debit
+          trxref: trxRef,
+          userId: targetId,
+        };
+
+        const newTargetTxnRef = doc(targetTransactionRef);
+        transaction.set(newTargetTxnRef, targetTransactionData);
+      });
+
+      console.log("Debit transaction completed successfully:", trxRef);
+    } catch (error: any) {
+      console.error("Debit transaction error:", error);
+      throw new Error(error.message || "Debit transaction failed");
+    }
+  },
 };

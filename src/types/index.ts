@@ -98,6 +98,10 @@ export interface Rider {
     dateOfBirth?: string;
     phoneNumber?: string;
   };
+  // Vehicle Verification
+  chassisNo?: string;
+  engineNo?: string;
+  statusReport?: "good" | "bad" | "fair";
 }
 
 export interface User {

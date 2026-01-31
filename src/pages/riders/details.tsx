@@ -363,6 +363,33 @@ export default function RiderDetailsPage() {
               <p className="text-sm text-muted-foreground">Plate Number</p>
               <p className="font-medium">{rider.plateNumber || "N/A"}</p>
             </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Chassis No</p>
+              <p className="font-medium">{rider.chassisNo || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Engine No</p>
+              <p className="font-medium">{rider.engineNo || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Status Report</p>
+              <Badge
+                variant={
+                  rider.statusReport === "good"
+                    ? "default"
+                    : rider.statusReport === "fair"
+                      ? "secondary"
+                      : rider.statusReport === "bad"
+                        ? "destructive"
+                        : "outline"
+                }
+              >
+                {rider.statusReport
+                  ? rider.statusReport.charAt(0).toUpperCase() +
+                    rider.statusReport.slice(1)
+                  : "N/A"}
+              </Badge>
+            </div>
           </div>
         </CardContent>
       </Card>

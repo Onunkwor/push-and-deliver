@@ -32,6 +32,7 @@ interface TransactModalProps {
 
 export function TransactModal({ open, onOpenChange }: TransactModalProps) {
   const { user: currentAdmin, refetchUser } = useCurrentUser();
+  const [transactionMode, setTransactionMode] = useState<"credit" | "debit">("credit");
   const [recipientType, setRecipientType] = useState<"user" | "rider">("user");
   const [users, setUsers] = useState<User[]>([]);
   const [riders, setRiders] = useState<Rider[]>([]);
@@ -88,12 +89,15 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
       return;
     }
 
-    if (
-      !currentAdmin?.walletbalance ||
-      currentAdmin.walletbalance < amountNum
-    ) {
-      toast.error("Insufficient wallet balance");
-      return;
+    // Only check admin balance for credit (sending money)
+    if (transactionMode === "credit") {
+      if (
+        !currentAdmin?.walletbalance ||
+        currentAdmin.walletbalance < amountNum
+      ) {
+        toast.error("Insufficient wallet balance");
+        return;
+      }
     }
 
     if (!narration.trim()) {
@@ -104,16 +108,25 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
     try {
       setLoading(true);
 
-      await transactionService.transferMoney({
-        senderId: currentAdmin.id!,
-        senderType: "user", // Super admin uses Users collection
-        recipientId: selectedRecipientId,
-        recipientType: recipientType,
-        amount: amountNum,
-        narration: narration.trim(),
-      });
+      if (transactionMode === "credit") {
+        await transactionService.transferMoney({
+          senderId: currentAdmin.id!,
+          senderType: "user", // Super admin uses Users collection
+          recipientId: selectedRecipientId,
+          recipientType: recipientType,
+          amount: amountNum,
+          narration: narration.trim(),
+        });
+      } else {
+        await transactionService.debitMoney({
+          targetId: selectedRecipientId,
+          targetType: recipientType,
+          amount: amountNum,
+          narration: narration.trim(),
+        });
+      }
 
-      toast.success("Transaction completed successfully");
+      toast.success(`${transactionMode === "credit" ? "Credit" : "Debit"} transaction completed successfully`);
 
       // Refetch user data to update wallet balance
       await refetchUser();
@@ -121,6 +134,7 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
       onOpenChange(false);
 
       // Reset form
+      setTransactionMode("credit");
       setSelectedRecipientId("");
       setAmount("");
       setNarration("");
@@ -138,13 +152,32 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Send Money</DialogTitle>
+          <DialogTitle>
+            {transactionMode === "credit" ? "Send Money (Credit)" : "Take Money (Debit)"}
+          </DialogTitle>
           <DialogDescription>
-            Transfer funds from your wallet to a user or rider
+            {transactionMode === "credit"
+              ? "Transfer funds from your wallet to a user or rider"
+              : "Debit funds from a user or rider's wallet"}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
+          {/* Transaction Mode Selection */}
+          <Tabs
+            value={transactionMode}
+            onValueChange={(value) =>
+              setTransactionMode(value as "credit" | "debit")
+            }
+            className="mb-4"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="credit">Credit (Send)</TabsTrigger>
+              <TabsTrigger value="debit">Debit (Take)</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Recipient Type Selection */}
           <Tabs
             value={recipientType}
             onValueChange={(value) =>
@@ -203,19 +236,21 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
           </Tabs>
 
           <div className="space-y-4">
-            {/* Wallet Balance Display */}
-            <div className="rounded-lg bg-muted p-3">
-              <p className="text-sm text-muted-foreground">
-                Your Wallet Balance
-              </p>
-              <p className="text-2xl font-bold text-green-600">
-                ₦
-                {adminBalance.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-            </div>
+            {/* Wallet Balance Display - Only show for credit mode */}
+            {transactionMode === "credit" && (
+              <div className="rounded-lg bg-muted p-3">
+                <p className="text-sm text-muted-foreground">
+                  Your Wallet Balance
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  ₦
+                  {adminBalance.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+            )}
 
             {/* Amount Input */}
             <div className="space-y-2">

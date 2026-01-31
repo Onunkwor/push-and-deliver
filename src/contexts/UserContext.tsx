@@ -6,7 +6,7 @@ import {
   useCallback,
 } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import type { User } from "@/types";
 
@@ -14,7 +14,7 @@ interface UserContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
-  adminType?: "super" | "regular" | "customercare" | "verifier";
+  adminType?: "super" | "regular" | "customercare" | "verifier" | "";
   refetchUser: () => Promise<void>;
 }
 
@@ -32,35 +32,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserData = useCallback(async (uid: string) => {
     try {
-      // Query Admin collection where userid field equals the Firebase Auth UID
-      const adminQuery = query(
-        collection(db, "Admin"),
-        where("userid", "==", uid),
-        limit(1)
-      );
-      const querySnapshot = await getDocs(adminQuery);
+      // Get user document from Users collection using Firebase Auth UID
+      const userRef = doc(db, "Users", uid);
+      const userSnap = await getDoc(userRef);
 
-      if (!querySnapshot.empty) {
-        const adminDoc = querySnapshot.docs[0];
-        const adminData = adminDoc.data();
-        setUser({
-          id: adminDoc.id,
-          isAdmin: true,
-          adminType: adminData.adminType,
-          email: adminData.email,
-          username: adminData.username,
-          imageURL: adminData.imageURL,
-          ...adminData,
-        } as User);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+
+        // Check if user is an admin using the isAdmin field
+        if (userData.isAdmin === true) {
+          setUser({
+            id: userSnap.id,
+            isAdmin: true,
+            adminType: userData.adminType || "regular",
+            email: userData.email,
+            username: userData.username,
+            imageURL: userData.imageURL,
+            ...userData,
+          } as User);
+        } else {
+          console.warn(
+            "User authenticated but is not an admin:",
+            uid
+          );
+          setUser(null);
+        }
       } else {
         console.warn(
-          "User authenticated but no Admin document found for userid:",
+          "User authenticated but no User document found for uid:",
           uid
         );
         setUser(null);
       }
     } catch (error) {
-      console.error("Failed to load admin profile:", error);
+      console.error("Failed to load user profile:", error);
       setUser(null);
     }
   }, []);
