@@ -170,12 +170,7 @@ export const transactionService = {
         const targetData = targetDoc.data();
         const targetBalance = targetData.walletbalance || 0;
 
-        // 2. Validate target has sufficient balance
-        if (targetBalance < amount) {
-          throw new Error("Target has insufficient wallet balance");
-        }
-
-        // 3. Update wallet balance (debit target)
+        // 2. Update wallet balance (debit target) - allow negative balance
         transaction.update(targetRef, {
           walletbalance: targetBalance - amount,
         });

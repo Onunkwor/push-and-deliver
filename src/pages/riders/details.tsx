@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -92,6 +93,9 @@ export default function RiderDetailsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newVerificationStatus, setNewVerificationStatus] =
     useState<VerificationStatus>(VerificationStatus.unverified);
+  const [newChassisNo, setNewChassisNo] = useState("");
+  const [newEngineNo, setNewEngineNo] = useState("");
+  const [newStatusReport, setNewStatusReport] = useState<"good" | "bad" | "fair" | "">("");
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -150,23 +154,39 @@ export default function RiderDetailsPage() {
     setNewVerificationStatus(
       rider?.verificationStatus || VerificationStatus.unverified
     );
+    setNewChassisNo(rider?.chassisNo || "");
+    setNewEngineNo(rider?.engineNo || "");
+    setNewStatusReport(rider?.statusReport || "");
     setEditDialogOpen(true);
   };
 
   const handleUpdateVerificationStatus = async () => {
-    if (!rider?.id || !newVerificationStatus) return;
+    if (!rider?.id) return;
 
     try {
       setUpdating(true);
-      await ridersService.updateRider(rider.id, {
+      const updateData: Partial<Rider> = {
         verificationStatus: newVerificationStatus,
-      });
-      toast.success("Verification status updated successfully");
+      };
+
+      // Include vehicle verification fields if provided
+      if (newChassisNo) {
+        updateData.chassisNo = newChassisNo;
+      }
+      if (newEngineNo) {
+        updateData.engineNo = newEngineNo;
+      }
+      if (newStatusReport) {
+        updateData.statusReport = newStatusReport;
+      }
+
+      await ridersService.updateRider(rider.id, updateData);
+      toast.success("Verification details updated successfully");
       setEditDialogOpen(false);
       await loadRiderData();
     } catch (error) {
-      console.error("Error updating verification status:", error);
-      toast.error("Failed to update verification status");
+      console.error("Error updating verification details:", error);
+      toast.error("Failed to update verification details");
     } finally {
       setUpdating(false);
     }
@@ -296,6 +316,42 @@ export default function RiderDetailsPage() {
                             >
                               Blocked
                             </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="chassisNo">Chassis No</Label>
+                        <Input
+                          id="chassisNo"
+                          value={newChassisNo}
+                          onChange={(e) => setNewChassisNo(e.target.value)}
+                          placeholder="Enter chassis number"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="engineNo">Engine No</Label>
+                        <Input
+                          id="engineNo"
+                          value={newEngineNo}
+                          onChange={(e) => setNewEngineNo(e.target.value)}
+                          placeholder="Enter engine number"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="statusReport">Status Report</Label>
+                        <Select
+                          value={newStatusReport}
+                          onValueChange={(value) =>
+                            setNewStatusReport(value as "good" | "bad" | "fair")
+                          }
+                        >
+                          <SelectTrigger id="statusReport">
+                            <SelectValue placeholder="Select status report" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="good">Good</SelectItem>
+                            <SelectItem value="fair">Fair</SelectItem>
+                            <SelectItem value="bad">Bad</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
