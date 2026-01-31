@@ -44,7 +44,20 @@ const getFeeTypeName = (feeType?: FeeType) => {
   if (feeType === FeeType.fooddeliveryfee) return "Food Delivery";
   if (feeType === FeeType.servicefee) return "Service Fee";
   if (feeType === FeeType.ridehauling) return "Ride Hauling";
+  if (feeType === FeeType.ridersnormalcut) return "Riders Normal Cut";
   return "Unknown";
+};
+
+// Check if fee type uses percentage values instead of Naira
+const isPercentageFee = (feeType?: FeeType) => {
+  return feeType === FeeType.ridersnormalcut;
+};
+
+const formatFeeValue = (value: number, feeType?: FeeType) => {
+  if (isPercentageFee(feeType)) {
+    return `${(value * 100).toFixed(0)}%`;
+  }
+  return `₦${formatAmount(value)}`;
 };
 
 export default function FeesPage() {
@@ -256,7 +269,7 @@ export default function FeesPage() {
                         {fee.addedSurge || 0}x
                       </TableCell>
                       <TableCell className="font-medium">
-                        ₦{formatAmount(fee.value || 0)}
+                        {formatFeeValue(fee.value || 0, fee.feeType)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Dialog
@@ -422,7 +435,11 @@ export default function FeesPage() {
                                   />
                                 </div>
                                 <div>
-                                  <Label htmlFor="value">Value (₦)</Label>
+                                  <Label htmlFor="value">
+                                    {isPercentageFee(editingFee?.feeType)
+                                      ? "Value (0-1 percentage)"
+                                      : "Value (₦)"}
+                                  </Label>
                                   <Input
                                     id="value"
                                     type="number"
@@ -433,9 +450,14 @@ export default function FeesPage() {
                                         value: e.target.value,
                                       })
                                     }
-                                    placeholder="Enter value"
+                                    placeholder={
+                                      isPercentageFee(editingFee?.feeType)
+                                        ? "Enter percentage (e.g., 0.3 for 30%)"
+                                        : "Enter value"
+                                    }
                                     step="0.01"
                                     min="0"
+                                    max={isPercentageFee(editingFee?.feeType) ? "1" : undefined}
                                     className="mt-2"
                                   />
                                 </div>

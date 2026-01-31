@@ -46,6 +46,7 @@ export const FeeType = {
   servicefee: 1,
   ridehauling: 2,
   freightbooking: 3,
+  ridersnormalcut: 5,
 } as const;
 export type FeeType = (typeof FeeType)[keyof typeof FeeType];
 
