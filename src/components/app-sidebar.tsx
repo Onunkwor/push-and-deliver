@@ -161,7 +161,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navItems = navItems.filter((item) => allowedTitles.includes(item.title));
   } else if (adminType === "verifier") {
     // Verifiers can only access Dashboard and Riders for document upload
-    const allowedTitles = ["Dashboard", "Riders"];
+    const allowedTitles = ["Riders"];
     navItems = navItems.filter((item) => allowedTitles.includes(item.title));
   } else if (adminType === "super") {
     // Add User Management for super admin

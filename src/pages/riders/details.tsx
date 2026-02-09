@@ -95,7 +95,9 @@ export default function RiderDetailsPage() {
     useState<VerificationStatus>(VerificationStatus.unverified);
   const [newChassisNo, setNewChassisNo] = useState("");
   const [newEngineNo, setNewEngineNo] = useState("");
-  const [newStatusReport, setNewStatusReport] = useState<"good" | "bad" | "fair" | "">("");
+  const [newStatusReport, setNewStatusReport] = useState<
+    "good" | "bad" | "fair" | ""
+  >("");
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
@@ -152,7 +154,7 @@ export default function RiderDetailsPage() {
   const handleEditClick = () => {
     console.log(rider?.verificationStatus);
     setNewVerificationStatus(
-      rider?.verificationStatus || VerificationStatus.unverified
+      rider?.verificationStatus || VerificationStatus.unverified,
     );
     setNewChassisNo(rider?.chassisNo || "");
     setNewEngineNo(rider?.engineNo || "");
@@ -287,38 +289,40 @@ export default function RiderDetailsPage() {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="status">Verification Status</Label>
-                        <Select
-                          value={String(newVerificationStatus)}
-                          onValueChange={(value) =>
-                            setNewVerificationStatus(
-                              Number(value) as VerificationStatus
-                            )
-                          }
-                        >
-                          <SelectTrigger id="status">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem
-                              value={String(VerificationStatus.verified)}
-                            >
-                              Verified
-                            </SelectItem>
-                            <SelectItem
-                              value={String(VerificationStatus.unverified)}
-                            >
-                              Unverified
-                            </SelectItem>
-                            <SelectItem
-                              value={String(VerificationStatus.blocked)}
-                            >
-                              Blocked
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {isSuperAdmin === true && (
+                        <div className="grid gap-2">
+                          <Label htmlFor="status">Verification Status</Label>
+                          <Select
+                            value={String(newVerificationStatus)}
+                            onValueChange={(value) =>
+                              setNewVerificationStatus(
+                                Number(value) as VerificationStatus,
+                              )
+                            }
+                          >
+                            <SelectTrigger id="status">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem
+                                value={String(VerificationStatus.verified)}
+                              >
+                                Verified
+                              </SelectItem>
+                              <SelectItem
+                                value={String(VerificationStatus.unverified)}
+                              >
+                                Unverified
+                              </SelectItem>
+                              <SelectItem
+                                value={String(VerificationStatus.blocked)}
+                              >
+                                Blocked
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                       <div className="grid gap-2">
                         <Label htmlFor="chassisNo">Chassis No</Label>
                         <Input
@@ -514,7 +518,7 @@ export default function RiderDetailsPage() {
                   if (rider.plateNumberPictureUrl) {
                     const storageRef = ref(
                       storage,
-                      rider.plateNumberPictureUrl
+                      rider.plateNumberPictureUrl,
                     );
                     await deleteObject(storageRef);
                   }
@@ -542,7 +546,7 @@ export default function RiderDetailsPage() {
                 try {
                   await ridersService.updateDriverLicensePicture(
                     rider.id!,
-                    url
+                    url,
                   );
                   setRider({ ...rider, driverLicensePictureUrl: url });
                   toast.success("Driver's license uploaded successfully");
@@ -557,7 +561,7 @@ export default function RiderDetailsPage() {
                   if (rider.driverLicensePictureUrl) {
                     const storageRef = ref(
                       storage,
-                      rider.driverLicensePictureUrl
+                      rider.driverLicensePictureUrl,
                     );
                     await deleteObject(storageRef);
                   }
@@ -713,7 +717,7 @@ export default function RiderDetailsPage() {
                           "font-medium",
                           txn.transactionType === 0
                             ? "text-green-500"
-                            : "text-red-500"
+                            : "text-red-500",
                         )}
                       >
                         ₦{formatAmount(txn.amount || 0)}

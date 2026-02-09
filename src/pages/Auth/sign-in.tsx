@@ -142,14 +142,14 @@ export default function SignInPage() {
             Google
           </Button>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        {/* <CardFooter className="flex justify-center">
           <div className="text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link to="/sign-up" className="text-primary hover:underline">
               Sign up
             </Link>
           </div>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
     </div>
   );

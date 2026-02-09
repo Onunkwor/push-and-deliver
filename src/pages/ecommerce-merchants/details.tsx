@@ -54,6 +54,7 @@ export default function EcommerceMerchantDetailsPage() {
   const [hasTransactions, setHasTransactions] = useState(false);
 
   const { user } = useCurrentUser();
+  const isSuperAdmin = user?.adminType === "super";
   const isViewOnly = user?.adminType === "customercare";
 
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function EcommerceMerchantDetailsPage() {
   const checkTransactions = async () => {
     try {
       const exists = await ecommerceMerchantsService.checkTransactionsExist(
-        id!
+        id!,
       );
       setHasTransactions(exists);
     } catch (error) {
@@ -203,76 +204,81 @@ export default function EcommerceMerchantDetailsPage() {
               <p className="text-sm text-muted-foreground">Merchant ID</p>
               <p className="font-mono text-sm">{merchant.id || "N/A"}</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Verification Status
-              </p>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant={
-                    getVerificationBadgeVariant(
-                      merchant.verificationStatus
-                    ) as any
-                  }
-                >
-                  {getVerificationLabel(merchant.verificationStatus)}
-                </Badge>
-                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEditClick}
-                      className={`h-6 text-xs ${isViewOnly ? "hidden" : ""}`}
-                    >
-                      Edit
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Verification Status</DialogTitle>
-                      <DialogDescription>
-                        Update the verification status for{" "}
-                        {merchant.displayName || "this merchant"}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="status">Verification Status</Label>
-                        <Select
-                          value={newVerificationStatus.toString()}
-                          onValueChange={(value) =>
-                            setNewVerificationStatus(parseInt(value))
-                          }
-                        >
-                          <SelectTrigger id="status">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">Verified</SelectItem>
-                            <SelectItem value="0">Unverified</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <DialogFooter>
+            {isSuperAdmin === true && (
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Verification Status
+                </p>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={
+                      getVerificationBadgeVariant(
+                        merchant.verificationStatus,
+                      ) as any
+                    }
+                  >
+                    {getVerificationLabel(merchant.verificationStatus)}
+                  </Badge>
+                  <Dialog
+                    open={editDialogOpen}
+                    onOpenChange={setEditDialogOpen}
+                  >
+                    <DialogTrigger asChild>
                       <Button
                         variant="outline"
-                        onClick={() => setEditDialogOpen(false)}
+                        size="sm"
+                        onClick={handleEditClick}
+                        className={`h-6 text-xs ${isViewOnly ? "hidden" : ""}`}
                       >
-                        Cancel
+                        Edit
                       </Button>
-                      <Button
-                        onClick={handleUpdateVerificationStatus}
-                        disabled={updating}
-                      >
-                        {updating ? "Updating..." : "Update Status"}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Verification Status</DialogTitle>
+                        <DialogDescription>
+                          Update the verification status for{" "}
+                          {merchant.displayName || "this merchant"}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="status">Verification Status</Label>
+                          <Select
+                            value={newVerificationStatus.toString()}
+                            onValueChange={(value) =>
+                              setNewVerificationStatus(parseInt(value))
+                            }
+                          >
+                            <SelectTrigger id="status">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">Verified</SelectItem>
+                              <SelectItem value="0">Unverified</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdateVerificationStatus}
+                          disabled={updating}
+                        >
+                          {updating ? "Updating..." : "Update Status"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -1,10 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -12,122 +18,131 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Search } from 'lucide-react'
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { restaurantsService } from '@/services/restaurants.service'
-import type { Restaurant } from '@/types'
-import { VerificationStatus } from '@/types'
-import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
+} from "@/components/ui/select";
+import { restaurantsService } from "@/services/restaurants.service";
+import type { Restaurant } from "@/types";
+import { VerificationStatus } from "@/types";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatAmount = (amount: number) => {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 export default function VendorsPage() {
-  const navigate = useNavigate()
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
-    loadRestaurants()
-  }, [])
+    loadRestaurants();
+  }, []);
 
   const loadRestaurants = async () => {
     try {
-      setLoading(true)
-      const data = await restaurantsService.getAllRestaurants()
-      setRestaurants(data)
+      setLoading(true);
+      const data = await restaurantsService.getAllRestaurants();
+      setRestaurants(data);
     } catch (error) {
-      console.error('Error loading restaurants:', error)
-      toast.error('Failed to load restaurants')
+      console.error("Error loading restaurants:", error);
+      toast.error("Failed to load restaurants");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filteredRestaurants = restaurants.filter((r) => {
     const matchesSearch =
       r.legalname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.phonenumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      r.phonenumber?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === 'all' ||
-      r.verificationStatus === statusFilter
+      statusFilter === "all" || r.verificationStatus === statusFilter;
 
-    return matchesSearch && matchesStatus
-  })
+    return matchesSearch && matchesStatus;
+  });
 
   const handleVerify = async (id: string) => {
     try {
-      setActionLoading(id)
-      await restaurantsService.verifyRestaurant(id)
-      toast.success('Restaurant verified successfully')
-      await loadRestaurants()
+      setActionLoading(id);
+      await restaurantsService.verifyRestaurant(id);
+      toast.success("Restaurant verified successfully");
+      await loadRestaurants();
     } catch (error) {
-      console.error('Error verifying restaurant:', error)
-      toast.error('Failed to verify restaurant')
+      console.error("Error verifying restaurant:", error);
+      toast.error("Failed to verify restaurant");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const handleBlock = async (id: string) => {
     try {
-      setActionLoading(id)
-      await restaurantsService.blockRestaurant(id)
-      toast.success('Restaurant blocked successfully')
-      await loadRestaurants()
+      setActionLoading(id);
+      await restaurantsService.blockRestaurant(id);
+      toast.success("Restaurant blocked successfully");
+      await loadRestaurants();
     } catch (error) {
-      console.error('Error blocking restaurant:', error)
-      toast.error('Failed to block restaurant')
+      console.error("Error blocking restaurant:", error);
+      toast.error("Failed to block restaurant");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const handleUnblock = async (id: string) => {
     try {
-      setActionLoading(id)
-      await restaurantsService.unblockRestaurant(id)
-      toast.success('Restaurant unblocked successfully')
-      await loadRestaurants()
+      setActionLoading(id);
+      await restaurantsService.unblockRestaurant(id);
+      toast.success("Restaurant unblocked successfully");
+      await loadRestaurants();
     } catch (error) {
-      console.error('Error unblocking restaurant:', error)
-      toast.error('Failed to unblock restaurant')
+      console.error("Error unblocking restaurant:", error);
+      toast.error("Failed to unblock restaurant");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const handleViewDetails = (restaurant: Restaurant) => {
     if (restaurant.id) {
-      navigate(`/vendors/${restaurant.id}`)
+      navigate(`/vendors/${restaurant.id}`);
     }
-  }
+  };
 
-  const totalRestaurants = restaurants.length
-  const verifiedRestaurants = restaurants.filter((r) => r.verificationStatus === VerificationStatus.verified).length
-  const blockedRestaurants = restaurants.filter((r) => r.verificationStatus === VerificationStatus.blocked).length
-  const totalWalletBalance = restaurants.reduce((sum, r) => sum + (r.walletbalance || 0), 0)
+  const totalRestaurants = restaurants.length;
+  const verifiedRestaurants = restaurants.filter(
+    (r) => r.verificationStatus === VerificationStatus.verified,
+  ).length;
+  const blockedRestaurants = restaurants.filter(
+    (r) => r.verificationStatus === VerificationStatus.blocked,
+  ).length;
+  const totalWalletBalance = restaurants.reduce(
+    (sum, r) => sum + (r.walletbalance || 0),
+    0,
+  );
 
   if (loading) {
     return (
@@ -149,7 +164,7 @@ export default function VendorsPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -157,7 +172,9 @@ export default function VendorsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Restaurants</h1>
-        <p className="text-muted-foreground">Manage restaurants, verification, and wallet balances</p>
+        <p className="text-muted-foreground">
+          Manage restaurants, verification, and wallet balances
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -210,7 +227,9 @@ export default function VendorsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Restaurant Details</CardTitle>
-          <CardDescription>View all restaurants with verification status and wallet information</CardDescription>
+          <CardDescription>
+            View all restaurants with verification status and wallet information
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search and Filter */}
@@ -230,9 +249,15 @@ export default function VendorsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value={VerificationStatus.verified}>Verified</SelectItem>
-                <SelectItem value={VerificationStatus.unverified}>Pending</SelectItem>
-                <SelectItem value={VerificationStatus.blocked}>Blocked</SelectItem>
+                <SelectItem value={VerificationStatus.verified}>
+                  Verified
+                </SelectItem>
+                <SelectItem value={VerificationStatus.unverified}>
+                  Pending
+                </SelectItem>
+                <SelectItem value={VerificationStatus.blocked}>
+                  Blocked
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -255,7 +280,10 @@ export default function VendorsPage() {
               <TableBody>
                 {filteredRestaurants.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell
+                      colSpan={8}
+                      className="text-center text-muted-foreground py-8"
+                    >
                       No restaurants found
                     </TableCell>
                   </TableRow>
@@ -266,26 +294,38 @@ export default function VendorsPage() {
                       className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => handleViewDetails(restaurant)}
                     >
-                      <TableCell className="font-medium">{restaurant.legalname|| 'N/A'}</TableCell>
-                      <TableCell className="text-sm">{restaurant.email || 'N/A'}</TableCell>
-                      <TableCell className="text-sm">{restaurant.phonenumber || 'N/A'}</TableCell>
-                      <TableCell className="text-sm">{restaurant.physicalAddress || 'N/A'}</TableCell>
+                      <TableCell className="font-medium">
+                        {restaurant.legalname || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {restaurant.email || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {restaurant.phonenumber || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {restaurant.physicalAddress || "N/A"}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            restaurant.verificationStatus === VerificationStatus.verified
-                              ? 'default'
-                              : restaurant.verificationStatus === VerificationStatus.blocked
-                              ? 'destructive'
-                              : 'secondary'
+                            restaurant.verificationStatus ===
+                            VerificationStatus.verified
+                              ? "default"
+                              : restaurant.verificationStatus ===
+                                  VerificationStatus.blocked
+                                ? "destructive"
+                                : "secondary"
                           }
                         >
-                          {restaurant.verificationStatus || 'unverified'}
+                          {restaurant.verificationStatus || "unverified"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={restaurant.isOpen ? 'default' : 'outline'}>
-                          {restaurant.isOpen ? 'Open' : 'Closed'}
+                        <Badge
+                          variant={restaurant.isOpen ? "default" : "outline"}
+                        >
+                          {restaurant.isOpen ? "Open" : "Closed"}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium">
@@ -294,12 +334,16 @@ export default function VendorsPage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" disabled={actionLoading === restaurant.id}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={actionLoading === restaurant.id}
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {restaurant.verificationStatus !== VerificationStatus.verified && (
+                            {/* {restaurant.verificationStatus !== VerificationStatus.verified && (
                               <DropdownMenuItem onClick={() => handleVerify(restaurant.id!)}>
                                 Verify Restaurant
                               </DropdownMenuItem>
@@ -312,7 +356,7 @@ export default function VendorsPage() {
                               <DropdownMenuItem onClick={() => handleBlock(restaurant.id!)}>
                                 Block Restaurant
                               </DropdownMenuItem>
-                            )}
+                            )} */}
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -326,5 +370,5 @@ export default function VendorsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
