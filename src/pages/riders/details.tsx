@@ -465,6 +465,25 @@ export default function RiderDetailsPage() {
                 {rider.ongoingOrder ? "Yes" : "No"}
               </Badge>
             </div>
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-sm text-muted-foreground">Image</p>
+              {rider.imageUrl ? (
+                <div
+                  style={{
+                    backgroundImage: `url(${rider.imageUrl})`,
+                    width: "200px",
+                    height: "200px",
+                    border: "1px solid black",
+                    backgroundSize: "cover", // makes the image cover the div
+                    backgroundPosition: "center", // centers the image
+                    backgroundRepeat: "no-repeat", // prevents tiling
+                    borderRadius: "100%", // optional: rounded corners
+                  }}
+                ></div>
+              ) : (
+                <span className="text-muted-foreground">N/A</span>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

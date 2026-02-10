@@ -1,10 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -12,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -20,175 +26,210 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { MoreHorizontal, Search, Eye } from 'lucide-react'
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Search, Eye } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { ridersService } from '@/services/riders.service'
-import type { Rider } from '@/types'
-import { VerificationStatus } from '@/types'
-import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ExportButton } from '@/components/ExportButton'
-import { exportToCSV } from '@/lib/csv-export'
+} from "@/components/ui/select";
+import { ridersService } from "@/services/riders.service";
+import type { Rider } from "@/types";
+import { VerificationStatus } from "@/types";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExportButton } from "@/components/ExportButton";
+import { exportToCSV } from "@/lib/csv-export";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import type { DateRange } from "react-day-picker";
+import { startOfDay, endOfDay, isWithinInterval } from "date-fns";
 
 const formatAmount = (amount: number) => {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 const getStatusLabel = (status: string | undefined) => {
   switch (status) {
     case VerificationStatus.verified:
-      return 'Verified'
+      return "Verified";
     case VerificationStatus.unverified:
-      return 'Unverified'
+      return "Unverified";
     case VerificationStatus.blocked:
-      return 'Blocked'
+      return "Blocked";
     case VerificationStatus.deleted:
-      return 'Deleted'
+      return "Deleted";
     default:
-      return 'Unverified'
+      return "Unverified";
   }
-}
+};
 
 const getStatusBadgeVariant = (status: string | undefined) => {
   switch (status) {
     case VerificationStatus.verified:
-      return 'default' as const
+      return "default" as const;
     case VerificationStatus.blocked:
-      return 'destructive' as const
+      return "destructive" as const;
     default:
-      return 'secondary' as const
+      return "secondary" as const;
   }
-}
+};
 
 export default function RidersPage() {
-  const navigate = useNavigate()
-  const [riders, setRiders] = useState<Rider[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [riders, setRiders] = useState<Rider[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   useEffect(() => {
-    loadRiders()
-  }, [])
+    loadRiders();
+  }, []);
 
   const loadRiders = async () => {
     try {
-      setLoading(true)
-      const data = await ridersService.getAllRiders()
-      setRiders(data)
+      setLoading(true);
+      const data = await ridersService.getAllRiders();
+      setRiders(data);
     } catch (error) {
-      console.error('Error loading riders:', error)
-      toast.error('Failed to load riders')
+      console.error("Error loading riders:", error);
+      toast.error("Failed to load riders");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filteredRiders = riders.filter((r) => {
     const matchesSearch =
       r.fullname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.phonenumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      r.phonenumber?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === 'all' ||
-      r.verificationStatus === statusFilter
+      statusFilter === "all" || r.verificationStatus === statusFilter;
 
-    return matchesSearch && matchesStatus
-  })
+    // Date range filter
+    let matchesDateRange = true;
+    if (dateRange?.from && r.createdAt) {
+      const createdDate =
+        r.createdAt instanceof Date ? r.createdAt : r.createdAt.toDate(); // Convert Firestore Timestamp to Date
+
+      if (dateRange.to) {
+        // Both from and to dates selected
+        matchesDateRange = isWithinInterval(createdDate, {
+          start: startOfDay(dateRange.from),
+          end: endOfDay(dateRange.to),
+        });
+      } else {
+        // Only from date selected
+        matchesDateRange = isWithinInterval(createdDate, {
+          start: startOfDay(dateRange.from),
+          end: endOfDay(dateRange.from),
+        });
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDateRange;
+  });
 
   const handleVerify = async (id: string) => {
     try {
-      setActionLoading(id)
-      await ridersService.verifyRider(id)
-      toast.success('Rider verified successfully')
-      await loadRiders()
+      setActionLoading(id);
+      await ridersService.verifyRider(id);
+      toast.success("Rider verified successfully");
+      await loadRiders();
     } catch (error) {
-      console.error('Error verifying rider:', error)
-      toast.error('Failed to verify rider')
+      console.error("Error verifying rider:", error);
+      toast.error("Failed to verify rider");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const handleBlock = async (id: string) => {
     try {
-      setActionLoading(id)
-      await ridersService.blockRider(id)
-      toast.success('Rider blocked successfully')
-      await loadRiders()
+      setActionLoading(id);
+      await ridersService.blockRider(id);
+      toast.success("Rider blocked successfully");
+      await loadRiders();
     } catch (error) {
-      console.error('Error blocking rider:', error)
-      toast.error('Failed to block rider')
+      console.error("Error blocking rider:", error);
+      toast.error("Failed to block rider");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const handleUnblock = async (id: string) => {
     try {
-      setActionLoading(id)
-      await ridersService.unblockRider(id)
-      toast.success('Rider unblocked successfully')
-      await loadRiders()
+      setActionLoading(id);
+      await ridersService.unblockRider(id);
+      toast.success("Rider unblocked successfully");
+      await loadRiders();
     } catch (error) {
-      console.error('Error unblocking rider:', error)
-      toast.error('Failed to unblock rider')
+      console.error("Error unblocking rider:", error);
+      toast.error("Failed to unblock rider");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
-  const handleStatusChange = async (riderId: string, newStatus: VerificationStatus) => {
+  const handleStatusChange = async (
+    riderId: string,
+    newStatus: VerificationStatus,
+  ) => {
     try {
-      setActionLoading(riderId)
+      setActionLoading(riderId);
 
       if (newStatus === VerificationStatus.verified) {
-        await ridersService.verifyRider(riderId)
-        toast.success('Rider verified successfully')
+        await ridersService.verifyRider(riderId);
+        toast.success("Rider verified successfully");
       } else if (newStatus === VerificationStatus.blocked) {
-        await ridersService.blockRider(riderId)
-        toast.success('Rider blocked successfully')
+        await ridersService.blockRider(riderId);
+        toast.success("Rider blocked successfully");
       } else if (newStatus === VerificationStatus.unverified) {
-        await ridersService.unblockRider(riderId)
-        toast.success('Rider status updated successfully')
+        await ridersService.unblockRider(riderId);
+        toast.success("Rider status updated successfully");
       }
 
-      await loadRiders()
-     
+      await loadRiders();
     } catch (error) {
-      console.error('Error updating rider status:', error)
-      toast.error('Failed to update rider status')
+      console.error("Error updating rider status:", error);
+      toast.error("Failed to update rider status");
     } finally {
-      setActionLoading(null)
+      setActionLoading(null);
     }
-  }
+  };
 
   const handleViewDetails = (rider: Rider) => {
     if (rider.id) {
-      navigate(`/riders/${rider.id}`)
+      navigate(`/riders/${rider.id}`);
     }
-  }
+  };
 
-  const totalRiders = riders.length
-  const verifiedRiders = riders.filter((r) => r.verificationStatus === VerificationStatus.verified).length
-  const blockedRiders = riders.filter((r) => r.verificationStatus === VerificationStatus.blocked).length
-  const pendingRiders = riders.filter((r) => r.verificationStatus === VerificationStatus.unverified).length
+  const totalRiders = riders.length;
+  const verifiedRiders = riders.filter(
+    (r) => r.verificationStatus === VerificationStatus.verified,
+  ).length;
+  const blockedRiders = riders.filter(
+    (r) => r.verificationStatus === VerificationStatus.blocked,
+  ).length;
+  const pendingRiders = riders.filter(
+    (r) => r.verificationStatus === VerificationStatus.unverified,
+  ).length;
 
   if (loading) {
     return (
@@ -210,7 +251,7 @@ export default function RidersPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -218,7 +259,9 @@ export default function RidersPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Riders</h1>
-        <p className="text-muted-foreground">Manage delivery riders, verification, and wallet balances</p>
+        <p className="text-muted-foreground">
+          Manage delivery riders, verification, and wallet balances
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -230,8 +273,15 @@ export default function RidersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: 'hsl(220, 40%, 45%)' }}>{totalRiders}</div>
-            <p className="text-xs text-muted-foreground mt-1">All registered riders</p>
+            <div
+              className="text-3xl font-bold"
+              style={{ color: "hsl(220, 40%, 45%)" }}
+            >
+              {totalRiders}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              All registered riders
+            </p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-[hsl(150,35%,42%)] bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-900/20 dark:to-background">
@@ -241,8 +291,15 @@ export default function RidersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: 'hsl(150, 35%, 42%)' }}>{verifiedRiders}</div>
-            <p className="text-xs text-muted-foreground mt-1">Active verified riders</p>
+            <div
+              className="text-3xl font-bold"
+              style={{ color: "hsl(150, 35%, 42%)" }}
+            >
+              {verifiedRiders}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Active verified riders
+            </p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-[hsl(30,50%,48%)] bg-gradient-to-br from-amber-50 to-white dark:from-amber-900/20 dark:to-background">
@@ -252,8 +309,15 @@ export default function RidersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: 'hsl(30, 50%, 48%)' }}>{pendingRiders}</div>
-            <p className="text-xs text-muted-foreground mt-1">Awaiting verification</p>
+            <div
+              className="text-3xl font-bold"
+              style={{ color: "hsl(30, 50%, 48%)" }}
+            >
+              {pendingRiders}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Awaiting verification
+            </p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-[hsl(350,50%,48%)] bg-gradient-to-br from-red-50 to-white dark:from-red-900/20 dark:to-background">
@@ -263,7 +327,12 @@ export default function RidersPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold" style={{ color: 'hsl(350, 50%, 48%)' }}>{blockedRiders}</div>
+            <div
+              className="text-3xl font-bold"
+              style={{ color: "hsl(350, 50%, 48%)" }}
+            >
+              {blockedRiders}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Blocked riders</p>
           </CardContent>
         </Card>
@@ -273,7 +342,9 @@ export default function RidersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Rider Details</CardTitle>
-          <CardDescription>View all riders with verification status and wallet information</CardDescription>
+          <CardDescription>
+            View all riders with verification status and wallet information
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search, Filter, and Export */}
@@ -293,29 +364,54 @@ export default function RidersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value={VerificationStatus.verified}>Verified</SelectItem>
-                <SelectItem value={VerificationStatus.unverified}>Pending</SelectItem>
-                <SelectItem value={VerificationStatus.blocked}>Blocked</SelectItem>
+                <SelectItem value={VerificationStatus.verified}>
+                  Verified
+                </SelectItem>
+                <SelectItem value={VerificationStatus.unverified}>
+                  Pending
+                </SelectItem>
+                <SelectItem value={VerificationStatus.blocked}>
+                  Blocked
+                </SelectItem>
               </SelectContent>
             </Select>
+            {/* Date Range Picker */}
+            <DateRangePicker
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+            />
+
+            {/* Clear Date Filter Button */}
+            {dateRange?.from && (
+              <Button variant="outline" onClick={() => setDateRange(undefined)}>
+                Clear Date
+              </Button>
+            )}
             <ExportButton
               onClick={() => {
                 exportToCSV(
                   filteredRiders,
                   [
-                    { header: 'Full Name', accessor: 'fullname' },
-                    { header: 'Email', accessor: 'email' },
-                    { header: 'Phone', accessor: 'phonenumber' },
-                    { header: 'Vehicle Type', accessor: 'vehicleType' },
-                    { header: 'Vehicle Make', accessor: 'vehicleMakename' },
-                    { header: 'Plate Number', accessor: 'plateNumber' },
-                    { header: 'Status', accessor: (r: Rider) => getStatusLabel(r.verificationStatus) },
-                    { header: 'Online', accessor: (r: Rider) => r.onlineStatus ? 'Yes' : 'No' },
-                    { header: 'Wallet Balance', accessor: 'walletbalance' },
+                    { header: "Full Name", accessor: "fullname" },
+                    { header: "Email", accessor: "email" },
+                    { header: "Phone", accessor: "phonenumber" },
+                    { header: "Vehicle Type", accessor: "vehicleType" },
+                    { header: "Vehicle Make", accessor: "vehicleMakename" },
+                    { header: "Plate Number", accessor: "plateNumber" },
+                    {
+                      header: "Status",
+                      accessor: (r: Rider) =>
+                        getStatusLabel(r.verificationStatus),
+                    },
+                    {
+                      header: "Online",
+                      accessor: (r: Rider) => (r.onlineStatus ? "Yes" : "No"),
+                    },
+                    { header: "Wallet Balance", accessor: "walletbalance" },
                   ],
-                  'riders_export'
-                )
-                toast.success('Riders exported successfully')
+                  "riders_export",
+                );
+                toast.success("Riders exported successfully");
               }}
               disabled={filteredRiders.length === 0}
             />
@@ -338,32 +434,54 @@ export default function RidersPage() {
               <TableBody>
                 {filteredRiders.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell
+                      colSpan={7}
+                      className="text-center text-muted-foreground py-8"
+                    >
                       No riders found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredRiders.map((rider) => (
-                    <TableRow key={rider.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => handleViewDetails(rider)}>
-                      <TableCell className="font-medium">{rider.fullname || 'N/A'}</TableCell>
-                      <TableCell className="text-sm">{rider.email || 'N/A'}</TableCell>
-                      <TableCell className="text-sm">{rider.phonenumber || 'N/A'}</TableCell>
+                    <TableRow
+                      key={rider.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => handleViewDetails(rider)}
+                    >
+                      <TableCell className="font-medium">
+                        {rider.fullname || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {rider.email || "N/A"}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {rider.phonenumber || "N/A"}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {rider.vehicleMakename || 'N/A'}
+                          {rider.vehicleMakename || "N/A"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(rider.verificationStatus)}>
+                        <Badge
+                          variant={getStatusBadgeVariant(
+                            rider.verificationStatus,
+                          )}
+                        >
                           {getStatusLabel(rider.verificationStatus)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={rider.onlineStatus ? 'default' : 'outline'}>
-                          {rider.onlineStatus ? 'Online' : 'Offline'}
+                        <Badge
+                          variant={rider.onlineStatus ? "default" : "outline"}
+                        >
+                          {rider.onlineStatus ? "Online" : "Offline"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Button
                           variant="ghost"
                           size="sm"
@@ -381,5 +499,5 @@ export default function RidersPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
