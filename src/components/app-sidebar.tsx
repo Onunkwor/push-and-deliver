@@ -160,8 +160,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ];
     navItems = navItems.filter((item) => allowedTitles.includes(item.title));
   } else if (adminType === "verifier") {
-    // Verifiers can only access Dashboard and Riders for document upload
-    const allowedTitles = ["Dashboard", "Riders"];
+    // Verifiers can only access Riders
+    const allowedTitles = ["Riders"];
     navItems = navItems.filter((item) => allowedTitles.includes(item.title));
   } else if (adminType === "super") {
     // Add User Management for super admin
@@ -170,6 +170,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/admin/users",
       icon: IconUserShield,
     });
+  }
+
+  // Exclude certain items for non-super admins
+  if (adminType !== "super") {
+    const excludedTitles = [
+      "DHL Zones",
+      "Fees",
+      "Delivery Zones",
+      "Export Rates",
+    ];
+    navItems = navItems.filter((item) => !excludedTitles.includes(item.title));
   }
 
   return (

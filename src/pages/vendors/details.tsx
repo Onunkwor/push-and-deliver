@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,9 +11,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft } from 'lucide-react'
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,132 +22,155 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { restaurantsService } from '@/services/restaurants.service'
-import type { Restaurant, Transaction } from '@/types'
-import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
-import { collection, query, orderBy, getDocs } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-import { getStatusLabel, getStatusBadgeVariant } from '@/lib/status-utils'
-import { VerificationStatus } from '@/types'
+} from "@/components/ui/select";
+import { restaurantsService } from "@/services/restaurants.service";
+import type { Restaurant, Transaction } from "@/types";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { getStatusLabel, getStatusBadgeVariant } from "@/lib/status-utils";
+import { VerificationStatus } from "@/types";
+import { useCurrentUser } from "@/contexts/UserContext";
 
 const formatAmount = (amount: number) => {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
 
 const getVerificationStatusLabel = (status: string | undefined) => {
   switch (status) {
-    case VerificationStatus.verified: return 'Verified'
-    case VerificationStatus.unverified: return 'Unverified'
-    case VerificationStatus.blocked: return 'Blocked'
-    case VerificationStatus.deleted: return 'Deleted'
-    default: return 'Unverified'
+    case VerificationStatus.verified:
+      return "Verified";
+    case VerificationStatus.unverified:
+      return "Unverified";
+    case VerificationStatus.blocked:
+      return "Blocked";
+    case VerificationStatus.deleted:
+      return "Deleted";
+    default:
+      return "Unverified";
   }
-}
+};
 
 const getVerificationBadgeVariant = (status: string | undefined) => {
   switch (status) {
-    case VerificationStatus.verified: return 'default'
-    case VerificationStatus.blocked: return 'destructive'
-    case VerificationStatus.deleted: return 'destructive'
-    default: return 'secondary'
+    case VerificationStatus.verified:
+      return "default";
+    case VerificationStatus.blocked:
+      return "destructive";
+    case VerificationStatus.deleted:
+      return "destructive";
+    default:
+      return "secondary";
   }
-}
+};
 
 export default function VendorDetailsPage() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadingTransactions, setLoadingTransactions] = useState(true)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [newVerificationStatus, setNewVerificationStatus] = useState<string>('')
-  const [updating, setUpdating] = useState(false)
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [newVerificationStatus, setNewVerificationStatus] =
+    useState<string>("");
+  const [updating, setUpdating] = useState(false);
+  const { user: currentAdmin } = useCurrentUser();
+  const isSuperAdmin = currentAdmin?.adminType === "super";
 
   useEffect(() => {
     if (id) {
-      loadRestaurantData()
-      loadRestaurantTransactions()
+      loadRestaurantData();
+      loadRestaurantTransactions();
     }
-  }, [id])
+  }, [id]);
 
   const loadRestaurantData = async () => {
     try {
-      setLoading(true)
-      const restaurantData = await restaurantsService.getRestaurantById(id!)
+      setLoading(true);
+      const restaurantData = await restaurantsService.getRestaurantById(id!);
 
       if (!restaurantData) {
-        toast.error('Restaurant not found')
-        navigate('/vendors')
-        return
+        toast.error("Restaurant not found");
+        navigate("/vendors");
+        return;
       }
 
-      setRestaurant(restaurantData)
+      setRestaurant(restaurantData);
     } catch (error) {
-      console.error('Error loading restaurant:', error)
-      toast.error('Failed to load restaurant data')
+      console.error("Error loading restaurant:", error);
+      toast.error("Failed to load restaurant data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadRestaurantTransactions = async () => {
     try {
-      setLoadingTransactions(true)
+      setLoadingTransactions(true);
 
       // Fetch from subcollection: Restaurants/{restaurantId}/Transactions
-      const transactionsRef = collection(db, 'Restaurants', id!, 'Transactions')
-      const q = query(transactionsRef, orderBy('time', 'desc'))
-      const querySnapshot = await getDocs(q)
+      const transactionsRef = collection(
+        db,
+        "Restaurants",
+        id!,
+        "Transactions",
+      );
+      const q = query(transactionsRef, orderBy("time", "desc"));
+      const querySnapshot = await getDocs(q);
 
-      const txns = querySnapshot.docs.map(doc => ({
+      const txns = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         time: doc.data().time?.toDate?.(),
-      })) as Transaction[]
+      })) as Transaction[];
 
-      setTransactions(txns)
+      setTransactions(txns);
     } catch (error) {
-      console.error('Error loading transactions:', error)
-      toast.error('Failed to load restaurant transactions')
+      console.error("Error loading transactions:", error);
+      toast.error("Failed to load restaurant transactions");
     } finally {
-      setLoadingTransactions(false)
+      setLoadingTransactions(false);
     }
-  }
+  };
 
   const handleEditClick = () => {
-    setNewVerificationStatus(restaurant?.verificationStatus || VerificationStatus.unverified)
-    setEditDialogOpen(true)
-  }
+    setNewVerificationStatus(
+      restaurant?.verificationStatus || VerificationStatus.unverified,
+    );
+    setEditDialogOpen(true);
+  };
 
   const handleUpdateVerificationStatus = async () => {
-    if (!restaurant?.id || !newVerificationStatus) return
+    if (!restaurant?.id || !newVerificationStatus) return;
 
     try {
-      setUpdating(true)
+      setUpdating(true);
       await restaurantsService.updateRestaurant(restaurant.id, {
-        verificationStatus: newVerificationStatus
-      })
-      toast.success('Verification status updated successfully')
-      setEditDialogOpen(false)
-      await loadRestaurantData()
+        verificationStatus: newVerificationStatus,
+      });
+      toast.success("Verification status updated successfully");
+      setEditDialogOpen(false);
+      await loadRestaurantData();
     } catch (error) {
-      console.error('Error updating verification status:', error)
-      toast.error('Failed to update verification status')
+      console.error("Error updating verification status:", error);
+      toast.error("Failed to update verification status");
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -159,11 +182,11 @@ export default function VendorDetailsPage() {
           <Skeleton className="h-96 w-full" />
         </div>
       </div>
-    )
+    );
   }
 
   if (!restaurant) {
-    return null
+    return null;
   }
 
   return (
@@ -173,14 +196,16 @@ export default function VendorDetailsPage() {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => navigate('/vendors')}
+          onClick={() => navigate("/vendors")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Restaurant Details</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Restaurant Details
+          </h1>
           <p className="text-muted-foreground">
-            Complete information for {restaurant.legalname || 'restaurant'}
+            Complete information for {restaurant.legalname || "restaurant"}
           </p>
         </div>
       </div>
@@ -194,84 +219,121 @@ export default function VendorDetailsPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <div>
               <p className="text-sm text-muted-foreground">Legal Name</p>
-              <p className="font-medium">{restaurant.legalname || 'N/A'}</p>
+              <p className="font-medium">{restaurant.legalname || "N/A"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{restaurant.email || 'N/A'}</p>
+              <p className="font-medium">{restaurant.email || "N/A"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Phone Number</p>
-              <p className="font-medium">{restaurant.phonenumber || 'N/A'}</p>
+              <p className="font-medium">{restaurant.phonenumber || "N/A"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Restaurant ID</p>
-              <p className="font-mono text-sm">{restaurant.id || 'N/A'}</p>
+              <p className="font-mono text-sm">{restaurant.id || "N/A"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Physical Address</p>
-              <p className="font-medium">{restaurant.physicalAddress || 'N/A'}</p>
+              <p className="font-medium">
+                {restaurant.physicalAddress || "N/A"}
+              </p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Verification Status</p>
-              <div className="flex items-center gap-2">
-                <Badge variant={getVerificationBadgeVariant(restaurant.verificationStatus) as any}>
-                  {getVerificationStatusLabel(restaurant.verificationStatus)}
-                </Badge>
-                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleEditClick}
-                      className="h-6 text-xs"
-                    >
-                      Edit
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Verification Status</DialogTitle>
-                      <DialogDescription>
-                        Update the verification status for {restaurant.legalname || 'this restaurant'}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="status">Verification Status</Label>
-                        <Select value={newVerificationStatus} onValueChange={setNewVerificationStatus}>
-                          <SelectTrigger id="status">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={VerificationStatus.verified}>Verified</SelectItem>
-                            <SelectItem value={VerificationStatus.unverified}>Unverified</SelectItem>
-                            <SelectItem value={VerificationStatus.blocked}>Blocked</SelectItem>
-                            <SelectItem value={VerificationStatus.deleted}>Deleted</SelectItem>
-                          </SelectContent>
-                        </Select>
+            {isSuperAdmin === true && (
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Verification Status
+                </p>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={
+                      getVerificationBadgeVariant(
+                        restaurant.verificationStatus,
+                      ) as any
+                    }
+                  >
+                    {getVerificationStatusLabel(restaurant.verificationStatus)}
+                  </Badge>
+                  <Dialog
+                    open={editDialogOpen}
+                    onOpenChange={setEditDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEditClick}
+                        className="h-6 text-xs"
+                      >
+                        Edit
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Edit Verification Status</DialogTitle>
+                        <DialogDescription>
+                          Update the verification status for{" "}
+                          {restaurant.legalname || "this restaurant"}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="status">Verification Status</Label>
+                          <Select
+                            value={newVerificationStatus}
+                            onValueChange={setNewVerificationStatus}
+                          >
+                            <SelectTrigger id="status">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={VerificationStatus.verified}>
+                                Verified
+                              </SelectItem>
+                              <SelectItem value={VerificationStatus.unverified}>
+                                Unverified
+                              </SelectItem>
+                              <SelectItem value={VerificationStatus.blocked}>
+                                Blocked
+                              </SelectItem>
+                              <SelectItem value={VerificationStatus.deleted}>
+                                Deleted
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleUpdateVerificationStatus} disabled={updating}>
-                        {updating ? 'Updating...' : 'Update Status'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleUpdateVerificationStatus}
+                          disabled={updating}
+                        >
+                          {updating ? "Updating..." : "Update Status"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
-            </div>
+            )}
             <div>
               <p className="text-sm text-muted-foreground">Rating</p>
-              <p className="font-medium">{restaurant.rating ? `${restaurant.rating.toFixed(1)} ⭐` : 'N/A'}</p>
+              <p className="font-medium">
+                {restaurant.rating
+                  ? `${restaurant.rating.toFixed(1)} ⭐`
+                  : "N/A"}
+              </p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
-              <Badge variant={restaurant.isOpen ? 'default' : 'secondary'}>
-                {restaurant.isOpen ? 'Open' : 'Closed'}
+              <Badge variant={restaurant.isOpen ? "default" : "secondary"}>
+                {restaurant.isOpen ? "Open" : "Closed"}
               </Badge>
             </div>
             <div>
@@ -299,19 +361,25 @@ export default function VendorDetailsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {restaurant.openingHrs && Object.keys(restaurant.openingHrs).length > 0 ? (
+            {restaurant.openingHrs &&
+            Object.keys(restaurant.openingHrs).length > 0 ? (
               Object.entries(restaurant.openingHrs).map(([day, hours]) => (
-                <div key={day} className="flex justify-between items-center p-2 border rounded">
+                <div
+                  key={day}
+                  className="flex justify-between items-center p-2 border rounded"
+                >
                   <span className="font-medium capitalize">{day}</span>
                   <span className="text-sm text-muted-foreground">
                     {hours?.open && hours?.close
                       ? `${hours.open} - ${hours.close}`
-                      : 'Closed'}
+                      : "Closed"}
                   </span>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No operating hours set</p>
+              <p className="text-sm text-muted-foreground">
+                No operating hours set
+              </p>
             )}
           </div>
         </CardContent>
@@ -326,7 +394,10 @@ export default function VendorDetailsPage() {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <p className="text-sm text-muted-foreground">Wallet Balance</p>
-              <p className="text-2xl font-bold" style={{ color: 'hsl(150, 35%, 42%)' }}>
+              <p
+                className="text-2xl font-bold"
+                style={{ color: "hsl(150, 35%, 42%)" }}
+              >
                 ₦{formatAmount(restaurant.walletbalance || 0)}
               </p>
             </div>
@@ -347,7 +418,9 @@ export default function VendorDetailsPage() {
               <Skeleton className="h-12 w-full" />
             </div>
           ) : transactions.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No transactions found</p>
+            <p className="text-center text-muted-foreground py-8">
+              No transactions found
+            </p>
           ) : (
             <div className="border rounded-lg overflow-hidden">
               <Table>
@@ -367,28 +440,34 @@ export default function VendorDetailsPage() {
                       <TableCell className="text-sm">
                         {txn.time instanceof Date
                           ? txn.time.toLocaleString()
-                          : 'N/A'}
+                          : "N/A"}
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={txn.transactionType === 'Credit' ? 'default' : 'secondary'}
+                          variant={
+                            txn.transactionType === "Credit"
+                              ? "default"
+                              : "secondary"
+                          }
                         >
-                          {txn.transactionType || 'N/A'}
+                          {txn.transactionType || "N/A"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm max-w-xs">
-                        {txn.narration || 'N/A'}
+                        {txn.narration || "N/A"}
                       </TableCell>
                       <TableCell className="font-medium">
                         ₦{formatAmount(txn.amount || 0)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(txn.status) as any}>
+                        <Badge
+                          variant={getStatusBadgeVariant(txn.status) as any}
+                        >
                           {getStatusLabel(txn.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {txn.trxref || 'N/A'}
+                        {txn.trxref || "N/A"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -399,5 +478,5 @@ export default function VendorDetailsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

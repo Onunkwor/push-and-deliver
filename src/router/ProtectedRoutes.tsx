@@ -2,10 +2,11 @@ import { LoadingModal } from "@/components/shared/Loader";
 import Unauthorized from "@/components/Unauthorized";
 import { useCurrentUser } from "@/contexts/UserContext";
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoutes = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, isAdmin } = useCurrentUser();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingModal />;
@@ -15,13 +16,20 @@ const ProtectedRoutes = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/sign-in" replace />;
   }
 
-  // Check if user is admin - assuming we still want this check since it was here before.
-  // If the user meant to remove this check for some roles, they would have said so,
-  // but they said "make it more than easy to work with the adminType as needed".
-  // The existing code checked `isAdmin`. The user data has `isAdmin: true`.
-  // If a user is not admin, they get Unauthorized.
   if (!isAdmin) {
     return <Unauthorized />;
+  }
+
+  // Define allowed routes for verifiers
+  const verifierAllowedRoutes = ["/riders"];
+
+  if (user.adminType === "verifier") {
+    // If verifier is trying to access an allowed route, let them through
+    if (verifierAllowedRoutes.includes(location.pathname)) {
+      return <div>{children}</div>;
+    }
+    // Otherwise, redirect to riders page
+    return <Navigate to="/riders" replace />;
   }
 
   return <div>{children}</div>;
