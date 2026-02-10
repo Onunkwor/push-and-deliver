@@ -37,13 +37,15 @@ export function NavMain({
   const location = useLocation();
   const { user } = useCurrentUser();
   const adminType = user?.adminType || "customercare";
+  const isValidAdmin =
+    user?.adminType === "super" || user?.adminType === "regular";
 
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
-            {adminType !== "customercare" && (
+            {adminType !== "customercare" && isValidAdmin && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <SidebarMenuButton
