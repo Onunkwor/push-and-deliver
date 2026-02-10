@@ -55,6 +55,9 @@ export interface Rider {
   id?: string;
   fullname?: string;
   phonenumber?: string;
+  dob?: string;
+  stateOfOrigin?: string;
+  localGovt?: string;
   fcmtoken?: string;
   deviceName?: string;
   email?: string;
@@ -103,6 +106,9 @@ export interface Rider {
   chassisNo?: string;
   engineNo?: string;
   statusReport?: "good" | "bad" | "fair";
+  nextOfKinAddress?: string;
+  nextOfKinName?: string;
+  nextOfKinPhonenumber?: string;
 }
 
 export interface User {
@@ -188,6 +194,7 @@ export interface Referral {
   referralCodeUsed?: string;
   referredUid?: string;
   referrerUid?: string;
+  referreduserType?: string;
 }
 
 export interface Fee {

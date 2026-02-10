@@ -1,8 +1,14 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,94 +16,109 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Search } from 'lucide-react'
-import { referralsService } from '@/services/referrals.service'
-import { usersService } from '@/services/users.service'
-import type { Referral, User } from '@/types'
-import { toast } from 'sonner'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ExportButton } from '@/components/ExportButton'
-import { exportToCSV } from '@/lib/csv-export'
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Search } from "lucide-react";
+import { referralsService } from "@/services/referrals.service";
+import { usersService } from "@/services/users.service";
+import type { Referral, User } from "@/types";
+import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExportButton } from "@/components/ExportButton";
+import { exportToCSV } from "@/lib/csv-export";
 
 export default function ReferralsPage() {
-  const [referrals, setReferrals] = useState<Referral[]>([])
-  const [users, setUsers] = useState<Map<string, User>>(new Map())
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [users, setUsers] = useState<Map<string, User>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const [referralsData, usersData] = await Promise.all([
         referralsService.getAllReferrals(),
         usersService.getAllUsers(),
-      ])
+      ]);
 
-      console.log('Referrals data loaded:', referralsData.length, 'referrals')
-      console.log('Users data loaded:', usersData.length, 'users')
+      console.log("Referrals data loaded:", referralsData.length, "referrals");
+      console.log("Users data loaded:", usersData.length, "users");
 
-      setReferrals(referralsData)
+      setReferrals(referralsData);
 
       // Create a map of users by ID for quick lookup
-      const usersMap = new Map<string, User>()
-      usersData.forEach(user => {
+      const usersMap = new Map<string, User>();
+      usersData.forEach((user) => {
         if (user.id) {
-          usersMap.set(user.id, user)
+          usersMap.set(user.id, user);
         }
-      })
-      setUsers(usersMap)
+      });
+      setUsers(usersMap);
     } catch (error) {
-      console.error('Error loading data:', error)
-      toast.error('Failed to load referrals. Check console for details.')
+      console.error("Error loading data:", error);
+      toast.error("Failed to load referrals. Check console for details.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Group referrals by referrer
-  const referrerStats = referrals.reduce((acc, ref) => {
-    const referrerId = ref.referrerUid
-    if (!referrerId) return acc
+  const referrerStats = referrals.reduce(
+    (acc, ref) => {
+      const referrerId = ref.referrerUid;
+      if (!referrerId) return acc;
 
-    if (!acc[referrerId]) {
-      const referrerUser = users.get(referrerId)
-      acc[referrerId] = {
-        referrerId,
-        referrerName: referrerUser?.username || 'Unknown',
-        referralCount: 0,
-        referredUsers: [],
+      if (!acc[referrerId]) {
+        const referrerUser = users.get(referrerId);
+        acc[referrerId] = {
+          referrerId,
+          referrerName: referrerUser?.username || "Unknown",
+          referralCount: 0,
+          referredUsers: [],
+          referredUserTypes: [],
+        };
       }
-    }
 
-    acc[referrerId].referralCount++
-    if (ref.referredUid) {
-      acc[referrerId].referredUsers.push(ref.referredUid)
-    }
+      acc[referrerId].referralCount++;
+      if (ref.referredUid) {
+        acc[referrerId].referredUsers.push(ref.referredUid);
+      }
+      if (ref.referreduserType) {
+        acc[referrerId].referredUserTypes.push(ref.referreduserType);
+      }
 
-    return acc
-  }, {} as Record<string, {
-    referrerId: string
-    referrerName: string
-    referralCount: number
-    referredUsers: string[]
-  }>)
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        referrerId: string;
+        referrerName: string;
+        referralCount: number;
+        referredUsers: string[];
+        referredUserTypes: string[];
+      }
+    >,
+  );
 
-  const referrerList = Object.values(referrerStats)
+  const referrerList = Object.values(referrerStats);
 
-  const filteredReferrers = referrerList.filter((r) =>
-    r.referrerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.referrerId.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredReferrers = referrerList.filter(
+    (r) =>
+      r.referrerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.referrerId.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
-  const totalReferrers = referrerList.length
-  const totalReferralCount = referrals.length
-  const avgReferrals = totalReferrers > 0 ? (totalReferralCount / totalReferrers).toFixed(1) : '0'
+  console.log(filteredReferrers);
+
+  const totalReferrers = referrerList.length;
+  const totalReferralCount = referrals.length;
+  const avgReferrals =
+    totalReferrers > 0 ? (totalReferralCount / totalReferrers).toFixed(1) : "0";
 
   if (loading) {
     return (
@@ -119,7 +140,7 @@ export default function ReferralsPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -127,7 +148,9 @@ export default function ReferralsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Referrals</h1>
-        <p className="text-muted-foreground">Track user referrals and referral activity</p>
+        <p className="text-muted-foreground">
+          Track user referrals and referral activity
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -168,7 +191,9 @@ export default function ReferralsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Referral Details</CardTitle>
-          <CardDescription>View all referrers and their referred users</CardDescription>
+          <CardDescription>
+            View all referrers and their referred users
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search and Export */}
@@ -184,23 +209,23 @@ export default function ReferralsPage() {
             </div>
             <ExportButton
               onClick={() => {
-                const exportData = filteredReferrers.map(r => ({
+                const exportData = filteredReferrers.map((r) => ({
                   referrerName: r.referrerName,
                   referrerId: r.referrerId,
                   referralCount: r.referralCount,
-                  status: r.referralCount > 5 ? 'Top Referrer' : 'Active',
-                }))
+                  status: r.referralCount > 5 ? "Top Referrer" : "Active",
+                }));
                 exportToCSV(
                   exportData,
                   [
-                    { header: 'Referrer Name', accessor: 'referrerName' },
-                    { header: 'Referrer ID', accessor: 'referrerId' },
-                    { header: 'Referral Count', accessor: 'referralCount' },
-                    { header: 'Status', accessor: 'status' },
+                    { header: "Referrer Name", accessor: "referrerName" },
+                    { header: "Referrer ID", accessor: "referrerId" },
+                    { header: "Referral Count", accessor: "referralCount" },
+                    { header: "Status", accessor: "status" },
                   ],
-                  'referrals_export'
-                )
-                toast.success('Referrals exported successfully')
+                  "referrals_export",
+                );
+                toast.success("Referrals exported successfully");
               }}
               disabled={filteredReferrers.length === 0}
             />
@@ -213,28 +238,67 @@ export default function ReferralsPage() {
                 <TableRow className="bg-muted/50">
                   <TableHead>Referrer Name</TableHead>
                   <TableHead>Referrer UID</TableHead>
-                  <TableHead>Referral Count</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Rider</TableHead>
+                  <TableHead>Total Referrer Count</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReferrers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center text-muted-foreground py-8"
+                    >
                       No referrals found
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredReferrers.map((referrer) => (
-                    <TableRow key={referrer.referrerId} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{referrer.referrerName}</TableCell>
-                      <TableCell className="font-mono text-sm">{referrer.referrerId}</TableCell>
+                    <TableRow
+                      key={referrer.referrerId}
+                      className="hover:bg-muted/50"
+                    >
+                      <TableCell className="font-medium">
+                        {referrer.referrerName}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {referrer.referrerId}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{referrer.referralCount}</Badge>
+                        <Badge variant="outline">
+                          {(() => {
+                            const userCount = referrer.referredUserTypes.filter(
+                              (type) => type === "user",
+                            ).length;
+                            // Count entries without a type (old referrals) and add to user count
+                            const unspecifiedCount =
+                              referrer.referralCount -
+                              referrer.referredUserTypes.length;
+                            return userCount + unspecifiedCount;
+                          })()}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {
+                            referrer.referredUserTypes.filter(
+                              (type) => type === "rider",
+                            ).length
+                          }
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {referrer.referralCount}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant="default">
-                          {referrer.referralCount > 5 ? 'Top Referrer' : 'Active'}
+                          {referrer.referralCount > 5
+                            ? "Top Referrer"
+                            : "Active"}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -246,5 +310,5 @@ export default function ReferralsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

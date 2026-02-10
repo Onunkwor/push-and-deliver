@@ -47,6 +47,52 @@ import { ImageUploadCard } from "@/components/ImageUploadCard";
 import { MonoVerificationDialog } from "@/components/MonoVerificationDialog";
 import { CardDescription } from "@/components/ui/card";
 
+function formatISOToReadable(isoString: string): string {
+  const date = new Date(isoString);
+
+  // Get day with ordinal suffix (1st, 2nd, 3rd, etc.)
+  const day = date.getDate();
+  const ordinalSuffix = (day: number): string => {
+    if (day > 3 && day < 21) return "th";
+    switch (day % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  };
+
+  // Get month name (short form)
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const month = months[date.getMonth()];
+
+  // Get year
+  const year = date.getFullYear();
+
+  return `${day}${ordinalSuffix(day)} ${month} ${year}`;
+}
+
+// Usage:
+// formatISOToReadable("2026-02-10T23:00:00.000Z") // "10th Feb 2026"
+// formatISOToReadable("2023-04-01T12:00:00.000Z") // "1st Apr 2023"
+
 const formatAmount = (amount: number) => {
   return amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
@@ -210,6 +256,7 @@ export default function RiderDetailsPage() {
   if (!rider) {
     return null;
   }
+  console.log(rider);
 
   return (
     <div className="p-8 space-y-6">
@@ -248,6 +295,34 @@ export default function RiderDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Phone Number</p>
               <p className="font-medium">{rider.phonenumber || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Date of birth</p>
+              <p className="font-medium">
+                {rider.dob ? formatISOToReadable(rider.dob) : "N/A"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">State of origin</p>
+              <p className="font-medium">{rider.stateOfOrigin || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">local Government</p>
+              <p className="font-medium">{rider.localGovt || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Next of kin</p>
+              <p className="font-medium">{rider.nextOfKinAddress || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">NOK Phone Number</p>
+              <p className="font-medium">
+                {rider.nextOfKinPhonenumber || "N/A"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">NOK Address</p>
+              <p className="font-medium">{rider.nextOfKinAddress || "N/A"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Rider ID</p>
