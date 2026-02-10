@@ -216,6 +216,7 @@ export default function RidersPage() {
 
   const handleViewDetails = (rider: Rider) => {
     if (rider.id) {
+      console.log("jdjdj");
       navigate(`/riders/${rider.id}`);
     }
   };

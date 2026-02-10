@@ -25,7 +25,7 @@ const ProtectedRoutes = ({ children }: { children: React.ReactNode }) => {
 
   if (user.adminType === "verifier") {
     // If verifier is trying to access an allowed route, let them through
-    if (verifierAllowedRoutes.includes(location.pathname)) {
+    if (location.pathname.startsWith("/riders")) {
       return <div>{children}</div>;
     }
     // Otherwise, redirect to riders page
