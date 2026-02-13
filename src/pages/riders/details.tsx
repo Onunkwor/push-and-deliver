@@ -136,7 +136,9 @@ export default function RiderDetailsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [plateDialogOpen, setPlateDialogOpen] = useState(false);
+
   const [newVerificationStatus, setNewVerificationStatus] =
     useState<VerificationStatus>(VerificationStatus.unverified);
   const [newChassisNo, setNewChassisNo] = useState("");
@@ -145,6 +147,8 @@ export default function RiderDetailsPage() {
     "good" | "bad" | "fair" | ""
   >("");
   const [updating, setUpdating] = useState(false);
+  const [newPlateNumber, setNewPlateNumber] = useState("");
+  const [isPlateNumberUpdating, setIsPlateNumberUpdating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -198,14 +202,13 @@ export default function RiderDetailsPage() {
   };
 
   const handleEditClick = () => {
-    console.log(rider?.verificationStatus);
     setNewVerificationStatus(
       rider?.verificationStatus || VerificationStatus.unverified,
     );
     setNewChassisNo(rider?.chassisNo || "");
     setNewEngineNo(rider?.engineNo || "");
     setNewStatusReport(rider?.statusReport || "");
-    setEditDialogOpen(true);
+    setVerificationDialogOpen(true);
   };
 
   const handleUpdateVerificationStatus = async () => {
@@ -230,13 +233,32 @@ export default function RiderDetailsPage() {
 
       await ridersService.updateRider(rider.id, updateData);
       toast.success("Verification details updated successfully");
-      setEditDialogOpen(false);
+      setVerificationDialogOpen(false);
       await loadRiderData();
     } catch (error) {
       console.error("Error updating verification details:", error);
       toast.error("Failed to update verification details");
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handlePlateNumberUpdate = async () => {
+    if (!rider?.id) return;
+    try {
+      setIsPlateNumberUpdating(true);
+      await ridersService.updateRider(rider.id, {
+        plateNumber: newPlateNumber,
+      });
+      toast.success("Plate Number updated successfully");
+      setPlateDialogOpen(false);
+      setNewPlateNumber("");
+      await loadRiderData();
+    } catch (error) {
+      console.error("Error updating plate number:", error);
+      toast.error("Failed to update plate number");
+    } finally {
+      setIsPlateNumberUpdating(false);
     }
   };
 
@@ -344,7 +366,10 @@ export default function RiderDetailsPage() {
                 >
                   {getVerificationStatusLabel(rider.verificationStatus)}
                 </Badge>
-                <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                <Dialog
+                  open={verificationDialogOpen}
+                  onOpenChange={setVerificationDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
@@ -438,7 +463,7 @@ export default function RiderDetailsPage() {
                     <DialogFooter>
                       <Button
                         variant="outline"
-                        onClick={() => setEditDialogOpen(false)}
+                        onClick={() => setVerificationDialogOpen(false)}
                       >
                         Cancel
                       </Button>
@@ -516,6 +541,50 @@ export default function RiderDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Plate Number</p>
               <p className="font-medium">{rider.plateNumber || "N/A"}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPlateDialogOpen(true)}
+              >
+                Edit
+              </Button>
+              <Dialog open={plateDialogOpen} onOpenChange={setPlateDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Verification Status</DialogTitle>
+                    <DialogDescription>
+                      Update the verification status for{" "}
+                      {/* {merchant.displayName || "this merchant"} */}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="status">Edit Plate Number</Label>
+                      <Input
+                        id="plateNumber"
+                        value={newPlateNumber}
+                        onChange={(e) => setNewPlateNumber(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setPlateDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handlePlateNumberUpdate}
+                      disabled={isPlateNumberUpdating || newPlateNumber === ""}
+                    >
+                      {isPlateNumberUpdating
+                        ? "Updating..."
+                        : "Update Plate Number"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Chassis No</p>
