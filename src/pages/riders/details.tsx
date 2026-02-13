@@ -89,10 +89,6 @@ function formatISOToReadable(isoString: string): string {
   return `${day}${ordinalSuffix(day)} ${month} ${year}`;
 }
 
-// Usage:
-// formatISOToReadable("2026-02-10T23:00:00.000Z") // "10th Feb 2026"
-// formatISOToReadable("2023-04-01T12:00:00.000Z") // "1st Apr 2023"
-
 const formatAmount = (amount: number) => {
   return amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
@@ -138,6 +134,7 @@ export default function RiderDetailsPage() {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [plateDialogOpen, setPlateDialogOpen] = useState(false);
+  const [colorDialogOpen, setColorDialogOpen] = useState(false);
 
   const [newVerificationStatus, setNewVerificationStatus] =
     useState<VerificationStatus>(VerificationStatus.unverified);
@@ -149,6 +146,8 @@ export default function RiderDetailsPage() {
   const [updating, setUpdating] = useState(false);
   const [newPlateNumber, setNewPlateNumber] = useState("");
   const [isPlateNumberUpdating, setIsPlateNumberUpdating] = useState(false);
+  const [newVehicleColor, setNewVehicleColor] = useState("");
+  const [isColorUpdating, setIsColorUpdating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -259,6 +258,38 @@ export default function RiderDetailsPage() {
       toast.error("Failed to update plate number");
     } finally {
       setIsPlateNumberUpdating(false);
+    }
+  };
+
+  const handleColorUpdate = async () => {
+    if (!rider?.id) return;
+    try {
+      setIsColorUpdating(true);
+      await ridersService.updateRider(rider.id, {
+        vehicleColor: newVehicleColor,
+      });
+      toast.success("Vehicle color updated successfully");
+      setColorDialogOpen(false);
+      setNewVehicleColor("");
+      await loadRiderData();
+    } catch (error) {
+      console.error("Error updating vehicle color:", error);
+      toast.error("Failed to update vehicle color");
+    } finally {
+      setIsColorUpdating(false);
+    }
+  };
+
+  const getVehicleTypeLabel = (type: number | undefined) => {
+    switch (type) {
+      case 0:
+        return "Car";
+      case 1:
+        return "Bicycle";
+      case 2:
+        return "Bike";
+      default:
+        return "N/A";
     }
   };
 
@@ -499,10 +530,10 @@ export default function RiderDetailsPage() {
                     width: "200px",
                     height: "200px",
                     border: "1px solid black",
-                    backgroundSize: "cover", // makes the image cover the div
-                    backgroundPosition: "center", // centers the image
-                    backgroundRepeat: "no-repeat", // prevents tiling
-                    borderRadius: "100%", // optional: rounded corners
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    borderRadius: "100%",
                   }}
                 ></div>
               ) : (
@@ -523,7 +554,9 @@ export default function RiderDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Vehicle Type</p>
               <p className="font-medium capitalize">
-                {rider.vehicleType || "N/A"}
+                {rider.vehicleType !== undefined
+                  ? getVehicleTypeLabel(Number(rider.vehicleType))
+                  : "N/A"}
               </p>
             </div>
             <div>
@@ -536,34 +569,86 @@ export default function RiderDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Color</p>
-              <p className="font-medium">{rider.vehicleColor || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Plate Number</p>
-              <p className="font-medium">{rider.plateNumber || "N/A"}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPlateDialogOpen(true)}
-              >
-                Edit
-              </Button>
-              <Dialog open={plateDialogOpen} onOpenChange={setPlateDialogOpen}>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{rider.vehicleColor || "N/A"}</p>
+                {isSuperAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setColorDialogOpen(true)}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+              <Dialog open={colorDialogOpen} onOpenChange={setColorDialogOpen}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Edit Verification Status</DialogTitle>
+                    <DialogTitle>Edit Vehicle Color</DialogTitle>
                     <DialogDescription>
-                      Update the verification status for{" "}
-                      {/* {merchant.displayName || "this merchant"} */}
+                      Update the vehicle color for{" "}
+                      {rider.fullname || "this rider"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="status">Edit Plate Number</Label>
+                      <Label htmlFor="vehicleColor">Vehicle Color</Label>
+                      <Input
+                        id="vehicleColor"
+                        value={newVehicleColor}
+                        onChange={(e) => setNewVehicleColor(e.target.value)}
+                        placeholder="Enter vehicle color"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setColorDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleColorUpdate}
+                      disabled={isColorUpdating || newVehicleColor === ""}
+                    >
+                      {isColorUpdating ? "Updating..." : "Update Color"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Plate Number</p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{rider.plateNumber || "N/A"}</p>
+                {isSuperAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPlateDialogOpen(true)}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+              <Dialog open={plateDialogOpen} onOpenChange={setPlateDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Plate Number</DialogTitle>
+                    <DialogDescription>
+                      Update the plate number for{" "}
+                      {rider.fullname || "this rider"}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="plateNumber">Plate Number</Label>
                       <Input
                         id="plateNumber"
                         value={newPlateNumber}
                         onChange={(e) => setNewPlateNumber(e.target.value)}
+                        placeholder="Enter plate number"
                       />
                     </div>
                   </div>
