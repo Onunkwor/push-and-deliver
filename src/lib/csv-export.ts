@@ -8,7 +8,7 @@ export interface CSVColumn<T> {
 export function exportToCSV<T>(
   data: T[],
   columns: CSVColumn<T>[],
-  filename: string
+  filename: string,
 ): void {
   if (data.length === 0) {
     console.warn("No data to export");
@@ -29,7 +29,7 @@ export function exportToCSV<T>(
               : item[col.accessor];
           return escapeCSVValue(String(value ?? ""));
         })
-        .join(",")
+        .join(","),
     )
     .join("\n");
 
@@ -44,7 +44,7 @@ export function exportToCSV<T>(
   link.setAttribute("href", url);
   link.setAttribute(
     "download",
-    `${filename}_${new Date().toISOString().split("T")[0]}.csv`
+    `${filename}_${new Date().toISOString().split("T")[0]}.csv`,
   );
   link.style.visibility = "hidden";
 
@@ -56,10 +56,7 @@ export function exportToCSV<T>(
 }
 
 function escapeCSVValue(value: string): string {
-  // If value contains comma, double quote, or newline, wrap in quotes
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    // Escape double quotes by doubling them
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
+  // Always wrap in quotes to prevent Excel auto-formatting
+  // Escape any existing double quotes by doubling them
+  return `"${value.replace(/"/g, '""')}"`;
 }

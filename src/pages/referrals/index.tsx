@@ -30,6 +30,7 @@ import { exportToCSV } from "@/lib/csv-export";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import type { DateRange } from "react-day-picker";
 import { startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export default function ReferralsPage() {
   const [referrals, setReferrals] = useState<Referral[]>([]);
@@ -37,6 +38,7 @@ export default function ReferralsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -156,6 +158,9 @@ export default function ReferralsPage() {
   const avgReferrals =
     totalReferrers > 0 ? (totalReferralCount / totalReferrers).toFixed(1) : "0";
 
+  const handleRowClick = (referralId: string) => {
+    navigate(`/referrals/${referralId}`);
+  };
   if (loading) {
     return (
       <div className="p-8 space-y-6">
@@ -331,6 +336,7 @@ export default function ReferralsPage() {
                     <TableRow
                       key={referrer.referrerId}
                       className="hover:bg-muted/50"
+                      onClick={() => handleRowClick(`${referrer.referrerId}`)}
                     >
                       <TableCell className="font-medium">
                         {referrer.referrerName}

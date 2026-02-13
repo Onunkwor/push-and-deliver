@@ -36,6 +36,7 @@ import ProtectedRoutes from "./ProtectedRoutes";
 import PublicRoute from "./PublicRoute";
 import SignInPage from "@/pages/Auth/sign-in";
 import SignUpPage from "@/pages/Auth/sign-up";
+import ReferralDetailsPage from "@/pages/referrals/details";
 
 function Router() {
   return (
@@ -99,6 +100,10 @@ function Router() {
                     element={<DeliveryZonesPage />}
                   />
                   <Route path="/referrals" element={<ReferralsPage />} />
+                  <Route
+                    path="/referrals/:id"
+                    element={<ReferralDetailsPage />}
+                  />
                   <Route path="/withdrawals" element={<WithdrawalsPage />} />
                   <Route path="/coupons" element={<CouponsPage />} />
                   <Route
