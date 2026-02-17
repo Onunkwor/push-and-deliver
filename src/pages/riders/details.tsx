@@ -735,7 +735,7 @@ export default function RiderDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Referred By</p>
               <p className="font-medium">
-                {rider.referredBy ? rider.referredBy : "N/A"}
+                {rider.referredBy ? String(rider.referredBy).slice(-5) : "N/A"}
               </p>
             </div>
             <div className="flex flex-col items-start gap-2">
