@@ -328,22 +328,31 @@ export default function RidersPage() {
               style={{ color: "hsl(220, 40%, 45%)" }}
             >
               {totalRiders}
-              <div>
+              <div className="flex gap-2">
                 <p className="text-xs text-muted-foreground">
                   Cars:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(220, 40%, 45%)" }}
+                  >
                     {carRiders}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Bicycles:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(220, 40%, 45%)" }}
+                  >
                     {bicycleRiders}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Bikes:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(220, 40%, 45%)" }}
+                  >
                     {bikeRiders}
                   </span>
                 </p>
@@ -367,22 +376,31 @@ export default function RidersPage() {
             >
               {verifiedRiders}
             </div>
-            <div>
+            <div className="flex gap-2">
               <p className="text-xs text-muted-foreground">
                 Cars:{" "}
-                <span className="font-semibold text-foreground">
+                <span
+                  className="font-bold text-foreground"
+                  style={{ color: "hsl(150, 35%, 42%)" }}
+                >
                   {verifiedByVehicle[0] || 0}
                 </span>
               </p>
               <p className="text-xs text-muted-foreground">
                 Bicycles:{" "}
-                <span className="font-semibold text-foreground">
+                <span
+                  className="font-bold text-foreground"
+                  style={{ color: "hsl(150, 35%, 42%)" }}
+                >
                   {verifiedByVehicle[1] || 0}
                 </span>
               </p>
               <p className="text-xs text-muted-foreground">
                 Bikes:{" "}
-                <span className="font-semibold text-foreground">
+                <span
+                  className="font-bold text-foreground"
+                  style={{ color: "hsl(150, 35%, 42%)" }}
+                >
                   {verifiedByVehicle[2] || 0}
                 </span>
               </p>
@@ -404,22 +422,31 @@ export default function RidersPage() {
               style={{ color: "hsl(30, 50%, 48%)" }}
             >
               {pendingRiders}
-              <div>
+              <div className="flex gap-2">
                 <p className="text-xs text-muted-foreground">
                   Cars:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(30, 50%, 48%)" }}
+                  >
                     {pendingByVehicle[0] || 0}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Bicycles:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(30, 50%, 48%)" }}
+                  >
                     {pendingByVehicle[1] || 0}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Bikes:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(30, 50%, 48%)" }}
+                  >
                     {pendingByVehicle[2] || 0}
                   </span>
                 </p>
@@ -442,22 +469,31 @@ export default function RidersPage() {
               style={{ color: "hsl(350, 50%, 48%)" }}
             >
               {blockedRiders}
-              <div>
+              <div className="flex gap-2">
                 <p className="text-xs text-muted-foreground">
                   Cars:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(350, 50%, 48%)" }}
+                  >
                     {blockedByVehicle[0] || 0}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Bicycles:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(350, 50%, 48%)" }}
+                  >
                     {blockedByVehicle[1] || 0}
                   </span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Bikes:{" "}
-                  <span className="font-semibold text-foreground">
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(350, 50%, 48%)" }}
+                  >
                     {blockedByVehicle[2] || 0}
                   </span>
                 </p>

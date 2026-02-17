@@ -52,6 +52,8 @@ export type FeeType = (typeof FeeType)[keyof typeof FeeType];
 
 // Interfaces
 export interface Rider {
+  licensePictureUrl?: string;
+  referredBy?: string;
   id?: string;
   fullname?: string;
   phonenumber?: string;
@@ -195,6 +197,7 @@ export interface Referral {
   referredUid?: string;
   referrerUid?: string;
   referreduserType?: string;
+  riderType?: string;
 }
 
 export interface Fee {
