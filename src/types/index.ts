@@ -63,7 +63,7 @@ export interface Rider {
   email?: string;
   imageUrl?: string;
   homeAddress?: string;
-  vehicleType?: VehicleType;
+  vehicleType?: number;
   verificationStatus?: VerificationStatus;
   ongoingOrder?: boolean;
   vehicleMakename?: string;
