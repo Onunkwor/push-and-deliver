@@ -151,8 +151,6 @@ export default function ReferralsPage() {
     return matchesSearch && matchesDateRange;
   });
 
-  console.log(filteredReferrers);
-
   const totalReferrers = referrerList.length;
   const totalReferralCount = referrals.length;
   const avgReferrals =

@@ -232,6 +232,55 @@ export default function RidersPage() {
     (r) => r.verificationStatus === VerificationStatus.unverified,
   ).length;
 
+  console.log(riders);
+
+  const ridersByVehicle = riders.reduce(
+    (acc, rider) => {
+      const type: number = rider.vehicleType ?? -1; // Handle undefined
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<number, number>,
+  );
+
+  // Add these calculations after your existing vehicle breakdown
+  const verifiedByVehicle = riders
+    .filter((r) => r.verificationStatus === VerificationStatus.verified)
+    .reduce(
+      (acc, rider) => {
+        const type: number = rider.vehicleType ?? -1;
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
+
+  const pendingByVehicle = riders
+    .filter((r) => r.verificationStatus === VerificationStatus.unverified)
+    .reduce(
+      (acc, rider) => {
+        const type: number = rider.vehicleType ?? -1;
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
+
+  const blockedByVehicle = riders
+    .filter((r) => r.verificationStatus === VerificationStatus.blocked)
+    .reduce(
+      (acc, rider) => {
+        const type: number = rider.vehicleType ?? -1;
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
+
+  const carRiders = ridersByVehicle[0] || 0;
+  const bicycleRiders = ridersByVehicle[1] || 0;
+  const bikeRiders = ridersByVehicle[2] || 0;
+
   if (loading) {
     return (
       <div className="p-8 space-y-6">
@@ -279,6 +328,35 @@ export default function RidersPage() {
               style={{ color: "hsl(220, 40%, 45%)" }}
             >
               {totalRiders}
+              <div className="flex gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Cars:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(220, 40%, 45%)" }}
+                  >
+                    {carRiders}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bicycles:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(220, 40%, 45%)" }}
+                  >
+                    {bicycleRiders}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bikes:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(220, 40%, 45%)" }}
+                  >
+                    {bikeRiders}
+                  </span>
+                </p>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               All registered riders
@@ -298,6 +376,35 @@ export default function RidersPage() {
             >
               {verifiedRiders}
             </div>
+            <div className="flex gap-2">
+              <p className="text-xs text-muted-foreground">
+                Cars:{" "}
+                <span
+                  className="font-bold text-foreground"
+                  style={{ color: "hsl(150, 35%, 42%)" }}
+                >
+                  {verifiedByVehicle[0] || 0}
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Bicycles:{" "}
+                <span
+                  className="font-bold text-foreground"
+                  style={{ color: "hsl(150, 35%, 42%)" }}
+                >
+                  {verifiedByVehicle[1] || 0}
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Bikes:{" "}
+                <span
+                  className="font-bold text-foreground"
+                  style={{ color: "hsl(150, 35%, 42%)" }}
+                >
+                  {verifiedByVehicle[2] || 0}
+                </span>
+              </p>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Active verified riders
             </p>
@@ -315,6 +422,35 @@ export default function RidersPage() {
               style={{ color: "hsl(30, 50%, 48%)" }}
             >
               {pendingRiders}
+              <div className="flex gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Cars:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(30, 50%, 48%)" }}
+                  >
+                    {pendingByVehicle[0] || 0}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bicycles:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(30, 50%, 48%)" }}
+                  >
+                    {pendingByVehicle[1] || 0}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bikes:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(30, 50%, 48%)" }}
+                  >
+                    {pendingByVehicle[2] || 0}
+                  </span>
+                </p>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Awaiting verification
@@ -333,6 +469,35 @@ export default function RidersPage() {
               style={{ color: "hsl(350, 50%, 48%)" }}
             >
               {blockedRiders}
+              <div className="flex gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Cars:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(350, 50%, 48%)" }}
+                  >
+                    {blockedByVehicle[0] || 0}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bicycles:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(350, 50%, 48%)" }}
+                  >
+                    {blockedByVehicle[1] || 0}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Bikes:{" "}
+                  <span
+                    className="font-bold text-foreground"
+                    style={{ color: "hsl(350, 50%, 48%)" }}
+                  >
+                    {blockedByVehicle[2] || 0}
+                  </span>
+                </p>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-1">Blocked riders</p>
           </CardContent>

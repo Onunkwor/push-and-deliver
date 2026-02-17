@@ -33,7 +33,7 @@ interface ImageUploadCardProps {
   description: string;
   imageUrl?: string | null;
   riderId: string;
-  imageType: "car" | "plateNumber" | "driverLicense";
+  imageType: "car" | "plateNumber" | "driverLicense" | "vehicleLicense";
   onUploadComplete: (downloadUrl: string) => void;
   onDeleteComplete: () => void;
   disabled?: boolean;
@@ -92,7 +92,7 @@ export function ImageUploadCard({
       const fileName = `${imageType}_${timestamp}.${fileExtension}`;
       const storageRef = ref(
         storage,
-        `riders/${riderId}/verification/${fileName}`
+        `riders/${riderId}/verification/${fileName}`,
       );
 
       // Upload file with progress tracking
@@ -118,7 +118,7 @@ export function ImageUploadCard({
           onUploadComplete(downloadURL);
           setUploading(false);
           setSelectedFile(null);
-        }
+        },
       );
     } catch (error) {
       console.error("Upload error:", error);
@@ -162,12 +162,21 @@ export function ImageUploadCard({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative rounded-lg overflow-hidden border">
-            <img
+          <div
+            className="relative  min-w-62.5 min-h-100  rounded-lg overflow-hidden border"
+            style={{
+              backgroundImage: `url(${imageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              // backgroundAttachment: "fixed",
+            }}
+          >
+            {/* <img
               src={imageUrl}
               alt={title}
               className="w-full h-auto max-h-[400px] object-contain bg-muted"
-            />
+            /> */}
           </div>
           {/* <p className="text-xs text-muted-foreground mt-2 text-center">
             Image uploaded successfully

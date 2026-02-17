@@ -148,6 +148,17 @@ export default function RiderDetailsPage() {
   const [isPlateNumberUpdating, setIsPlateNumberUpdating] = useState(false);
   const [newVehicleColor, setNewVehicleColor] = useState("");
   const [isColorUpdating, setIsColorUpdating] = useState(false);
+  const [stateDialogOpen, setStateDialogOpen] = useState(false);
+  const [lgaDialogOpen, setLgaDialogOpen] = useState(false);
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+
+  const [newStateOfOrigin, setNewStateOfOrigin] = useState("");
+  const [newLocalGovt, setNewLocalGovt] = useState("");
+  const [newHomeAddress, setNewHomeAddress] = useState("");
+
+  const [isStateUpdating, setIsStateUpdating] = useState(false);
+  const [isLgaUpdating, setIsLgaUpdating] = useState(false);
+  const [isAddressUpdating, setIsAddressUpdating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -280,6 +291,35 @@ export default function RiderDetailsPage() {
     }
   };
 
+  const handleFieldUpdate = async <K extends keyof Rider>(
+    field: K,
+    value: Rider[K],
+    isUpdating: boolean,
+    setIsUpdating: (isUpdating: boolean) => void,
+    setDialogOpen: (isOpen: boolean) => void,
+    loadRiderData: () => Promise<void>,
+  ) => {
+    if (!rider?.id) return;
+
+    try {
+      setIsUpdating(true);
+
+      await ridersService.updateRider(rider.id, {
+        [field]: value,
+      });
+
+      toast.success(`${String(field)} updated successfully`);
+
+      setDialogOpen(false);
+      await loadRiderData();
+    } catch (error) {
+      console.error(`Error updating ${String(field)}:`, error);
+      toast.error(`Failed to update ${String(field)}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const getVehicleTypeLabel = (type: number | undefined) => {
     switch (type) {
       case 0:
@@ -309,7 +349,7 @@ export default function RiderDetailsPage() {
   if (!rider) {
     return null;
   }
-  console.log(rider);
+  const isCarOrBike = rider.vehicleType === 0 || rider.vehicleType === 2;
 
   return (
     <div className="p-8 space-y-6">
@@ -357,12 +397,124 @@ export default function RiderDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">State of origin</p>
-              <p className="font-medium">{rider.stateOfOrigin || "N/A"}</p>
+
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{rider.stateOfOrigin || "N/A"}</p>
+
+                {isSuperAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setNewStateOfOrigin(rider.stateOfOrigin || "");
+                      setStateDialogOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+
+              <Dialog open={stateDialogOpen} onOpenChange={setStateDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit State of Origin</DialogTitle>
+                  </DialogHeader>
+
+                  <Input
+                    value={newStateOfOrigin}
+                    onChange={(e) => setNewStateOfOrigin(e.target.value)}
+                    placeholder="Enter state of origin"
+                  />
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setStateDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      disabled={isStateUpdating || !newStateOfOrigin}
+                      onClick={() =>
+                        handleFieldUpdate(
+                          "stateOfOrigin",
+                          newStateOfOrigin,
+                          isStateUpdating,
+                          setIsStateUpdating,
+                          setStateDialogOpen,
+                          loadRiderData,
+                        )
+                      }
+                    >
+                      {isStateUpdating ? "Updating..." : "Update"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
+
             <div>
-              <p className="text-sm text-muted-foreground">local Government</p>
-              <p className="font-medium">{rider.localGovt || "N/A"}</p>
+              <p className="text-sm text-muted-foreground">Local Government</p>
+
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{rider.localGovt || "N/A"}</p>
+
+                {isSuperAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setNewLocalGovt(rider.localGovt || "");
+                      setLgaDialogOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+
+              <Dialog open={lgaDialogOpen} onOpenChange={setLgaDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Local Government</DialogTitle>
+                  </DialogHeader>
+
+                  <Input
+                    value={newLocalGovt}
+                    onChange={(e) => setNewLocalGovt(e.target.value)}
+                    placeholder="Enter local government"
+                  />
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setLgaDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      disabled={isLgaUpdating || !newLocalGovt}
+                      onClick={() =>
+                        handleFieldUpdate(
+                          "localGovt",
+                          newLocalGovt,
+                          isLgaUpdating,
+                          setIsLgaUpdating,
+                          setLgaDialogOpen,
+                          loadRiderData,
+                        )
+                      }
+                    >
+                      {isLgaUpdating ? "Updating..." : "Update"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
+
             <div>
               <p className="text-sm text-muted-foreground">Next of kin</p>
               <p className="font-medium">{rider.nextOfKinAddress || "N/A"}</p>
@@ -383,8 +535,67 @@ export default function RiderDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Home Address</p>
-              <p className="font-medium">{rider.homeAddress || "N/A"}</p>
+
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{rider.homeAddress || "N/A"}</p>
+
+                {isSuperAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setNewHomeAddress(rider.homeAddress || "");
+                      setAddressDialogOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </div>
+
+              <Dialog
+                open={addressDialogOpen}
+                onOpenChange={setAddressDialogOpen}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Home Address</DialogTitle>
+                  </DialogHeader>
+
+                  <Input
+                    value={newHomeAddress}
+                    onChange={(e) => setNewHomeAddress(e.target.value)}
+                    placeholder="Enter home address"
+                  />
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setAddressDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      disabled={isAddressUpdating || !newHomeAddress}
+                      onClick={() =>
+                        handleFieldUpdate(
+                          "homeAddress",
+                          newHomeAddress,
+                          isAddressUpdating,
+                          setIsAddressUpdating,
+                          setAddressDialogOpen,
+                          loadRiderData,
+                        )
+                      }
+                    >
+                      {isAddressUpdating ? "Updating..." : "Update"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
+
             <div>
               <p className="text-sm text-muted-foreground">
                 Verification Status
@@ -520,6 +731,12 @@ export default function RiderDetailsPage() {
               <Badge variant={rider.ongoingOrder ? "default" : "secondary"}>
                 {rider.ongoingOrder ? "Yes" : "No"}
               </Badge>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Referred By</p>
+              <p className="font-medium">
+                {rider.referredBy ? rider.referredBy : "N/A"}
+              </p>
             </div>
             <div className="flex flex-col items-start gap-2">
               <p className="text-sm text-muted-foreground">Image</p>
@@ -708,8 +925,20 @@ export default function RiderDetailsPage() {
           <h2 className="text-xl font-semibold">Verification Images</h2>
           <div className="grid gap-4 md:grid-cols-3">
             <ImageUploadCard
-              title="Car Picture"
-              description="Upload a clear photo of the rider's vehicle"
+              title={
+                rider.vehicleType === 2
+                  ? "Bike Picture"
+                  : rider.vehicleType === 1
+                    ? "Bicycle Image"
+                    : "Car Picture"
+              }
+              description={`Upload a clear photo of the ${
+                rider.vehicleType === 2
+                  ? "Bike Picture"
+                  : rider.vehicleType === 1
+                    ? "Bicycle Image"
+                    : "Car Picture"
+              } of the rider `}
               imageUrl={rider.carPictureUrl}
               riderId={rider.id!}
               imageType="car"
@@ -744,49 +973,69 @@ export default function RiderDetailsPage() {
               }}
             />
 
-            <ImageUploadCard
-              title="Plate Number Picture"
-              description="Upload a clear photo of the vehicle's plate number"
-              imageUrl={rider.plateNumberPictureUrl}
-              riderId={rider.id!}
-              imageType="plateNumber"
-              onUploadComplete={async (url) => {
-                try {
-                  await ridersService.updatePlateNumberPicture(rider.id!, url);
-                  setRider({ ...rider, plateNumberPictureUrl: url });
-                  toast.success("Plate number picture uploaded successfully");
-                } catch (error) {
-                  console.error("Error saving plate number picture:", error);
-                  toast.error("Failed to save plate number picture");
-                }
-              }}
-              onDeleteComplete={async () => {
-                try {
-                  // Delete from Firebase Storage first
-                  if (rider.plateNumberPictureUrl) {
-                    const storageRef = ref(
-                      storage,
-                      rider.plateNumberPictureUrl,
+            {isCarOrBike && (
+              <ImageUploadCard
+                title="Plate Number Picture"
+                description="Upload a clear photo of the vehicle's plate number"
+                imageUrl={rider.plateNumberPictureUrl}
+                riderId={rider.id!}
+                imageType="plateNumber"
+                onUploadComplete={async (url) => {
+                  try {
+                    await ridersService.updatePlateNumberPicture(
+                      rider.id!,
+                      url,
                     );
-                    await deleteObject(storageRef);
+                    setRider({ ...rider, plateNumberPictureUrl: url });
+                    toast.success("Plate number picture uploaded successfully");
+                  } catch (error) {
+                    console.error("Error saving plate number picture:", error);
+                    toast.error("Failed to save plate number picture");
                   }
+                }}
+                onDeleteComplete={async () => {
+                  try {
+                    // Delete from Firebase Storage first
+                    if (rider.plateNumberPictureUrl) {
+                      const storageRef = ref(
+                        storage,
+                        rider.plateNumberPictureUrl,
+                      );
+                      await deleteObject(storageRef);
+                    }
 
-                  // Then update Firestore to set URL to null
-                  await ridersService.deletePlateNumberPicture(rider.id!);
+                    // Then update Firestore to set URL to null
+                    await ridersService.deletePlateNumberPicture(rider.id!);
 
-                  // Update local state
-                  setRider({ ...rider, plateNumberPictureUrl: null });
-                  toast.success("Plate number picture deleted successfully");
-                } catch (error) {
-                  console.error("Error deleting plate number picture:", error);
-                  toast.error("Failed to delete plate number picture");
-                }
-              }}
-            />
+                    // Update local state
+                    setRider({ ...rider, plateNumberPictureUrl: null });
+                    toast.success("Plate number picture deleted successfully");
+                  } catch (error) {
+                    console.error(
+                      "Error deleting plate number picture:",
+                      error,
+                    );
+                    toast.error("Failed to delete plate number picture");
+                  }
+                }}
+              />
+            )}
 
             <ImageUploadCard
-              title="Driver's License"
-              description="Upload a clear photo of the rider's driver's license"
+              title={
+                rider.vehicleType === 0
+                  ? "Driver's License"
+                  : rider.vehicleType === 1
+                    ? "NIN"
+                    : "Rider Card"
+              }
+              description={`Upload a clear photo of the ${
+                rider.vehicleType === 0
+                  ? "Driver's License"
+                  : rider.vehicleType === 1
+                    ? "NIN"
+                    : "Rider Card"
+              } of the rider `}
               imageUrl={rider.driverLicensePictureUrl}
               riderId={rider.id!}
               imageType="driverLicense"
@@ -826,6 +1075,47 @@ export default function RiderDetailsPage() {
                 }
               }}
             />
+            {isCarOrBike && (
+              <ImageUploadCard
+                title="Vehicle License"
+                description="Upload a clear photo of the rider's vehicle's license"
+                imageUrl={rider.licensePictureUrl}
+                riderId={rider.id!}
+                imageType="vehicleLicense"
+                onUploadComplete={async (url) => {
+                  try {
+                    await ridersService.updateVehicleLicensePicture(
+                      rider.id!,
+                      url,
+                    );
+                    setRider({ ...rider, licensePictureUrl: url });
+                    toast.success("vehicle's license uploaded successfully");
+                  } catch (error) {
+                    console.error("Error saving vehicle's license:", error);
+                    toast.error("Failed to save vehicle's license");
+                  }
+                }}
+                onDeleteComplete={async () => {
+                  try {
+                    // Delete from Firebase Storage first
+                    if (rider.licensePictureUrl) {
+                      const storageRef = ref(storage, rider.licensePictureUrl);
+                      await deleteObject(storageRef);
+                    }
+
+                    // Then update Firestore to set URL to null
+                    await ridersService.deleteVehicleLicensePicture(rider.id!);
+
+                    // Update local state
+                    setRider({ ...rider, licensePictureUrl: null });
+                    toast.success("Vehicle's license deleted successfully");
+                  } catch (error) {
+                    console.error("Error deleting Vehicle's license:", error);
+                    toast.error("Failed to delete Vehicle's license");
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
       )}

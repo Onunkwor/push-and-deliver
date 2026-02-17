@@ -22,7 +22,7 @@ export const ridersService = {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
       const querySnapshot = await getDocs(q);
 
@@ -44,7 +44,7 @@ export const ridersService = {
       const q = query(
         collection(db, COLLECTION_NAME),
         where("verificationStatus", "==", VerificationStatus.verified),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
       const querySnapshot = await getDocs(q);
 
@@ -66,7 +66,7 @@ export const ridersService = {
       const q = query(
         collection(db, COLLECTION_NAME),
         where("verificationStatus", "==", VerificationStatus.unverified),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
       const querySnapshot = await getDocs(q);
 
@@ -88,7 +88,7 @@ export const ridersService = {
       const q = query(
         collection(db, COLLECTION_NAME),
         where("verificationStatus", "==", VerificationStatus.blocked),
-        orderBy("createdAt", "desc")
+        orderBy("createdAt", "desc"),
       );
       const querySnapshot = await getDocs(q);
 
@@ -171,7 +171,7 @@ export const ridersService = {
   // Update rider information
   async updateRider(
     id: string,
-    riderData: Partial<Omit<Rider, "id" | "createdAt">>
+    riderData: Partial<Omit<Rider, "id" | "createdAt">>,
   ): Promise<void> {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -202,7 +202,7 @@ export const ridersService = {
   // Update plate number picture URL
   async updatePlateNumberPicture(
     id: string,
-    plateNumberPictureUrl: string
+    plateNumberPictureUrl: string,
   ): Promise<void> {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -219,7 +219,7 @@ export const ridersService = {
   // Update driver's license picture URL
   async updateDriverLicensePicture(
     id: string,
-    driverLicensePictureUrl: string
+    driverLicensePictureUrl: string,
   ): Promise<void> {
     try {
       const docRef = doc(db, COLLECTION_NAME, id);
@@ -229,6 +229,22 @@ export const ridersService = {
       });
     } catch (error) {
       console.error("Error updating driver license picture:", error);
+      throw error;
+    }
+  },
+  // Update vehicle's license picture URL
+  async updateVehicleLicensePicture(
+    id: string,
+    licensePictureUrl: string,
+  ): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        licensePictureUrl,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error updating vehicle license picture:", error);
       throw error;
     }
   },
@@ -271,6 +287,19 @@ export const ridersService = {
       });
     } catch (error) {
       console.error("Error deleting driver license picture:", error);
+      throw error;
+    }
+  },
+  // Delete vehicle license picture
+  async deleteVehicleLicensePicture(id: string): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, {
+        licensePictureUrl: null,
+        updatedAt: Timestamp.fromDate(new Date()),
+      });
+    } catch (error) {
+      console.error("Error deleting vehicle license picture:", error);
       throw error;
     }
   },

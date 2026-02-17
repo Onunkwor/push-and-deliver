@@ -200,6 +200,7 @@ export default function ReferralDetailsPage() {
                   referrerUid: ref.referrerUid || "N/A",
                   referredUserUid: ref.referredUid || "N/A",
                   referredUserType: ref.referreduserType || "user",
+                  riderType: ref.riderType || "N/A",
                   referralCodeUsed: ref.referralCodeUsed || "N/A",
                 }));
 
@@ -217,6 +218,7 @@ export default function ReferralDetailsPage() {
                       header: "Referred User Type",
                       accessor: "referredUserType",
                     },
+                    { header: "Rider Type", accessor: "riderType" },
                     {
                       header: "Referral Code Used",
                       accessor: "referralCodeUsed",
@@ -240,6 +242,7 @@ export default function ReferralDetailsPage() {
                   <TableHead>Referrer UID</TableHead>
                   <TableHead>Referred User UID</TableHead>
                   <TableHead>Referred User Type</TableHead>
+                  <TableHead>Rider Type</TableHead>
                   <TableHead>Referral Code</TableHead>
                 </TableRow>
               </TableHeader>
@@ -266,9 +269,10 @@ export default function ReferralDetailsPage() {
                       <TableCell className="font-mono text-sm">
                         {referral.referredUid || "N/A"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="capitalize">
                         {referral.referreduserType || "user"}
                       </TableCell>
+                      <TableCell>{referral.riderType || "N/A"}</TableCell>
                       <TableCell>
                         {referral.referralCodeUsed || "N/A"}
                       </TableCell>
