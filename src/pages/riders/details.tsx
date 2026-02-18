@@ -38,7 +38,12 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase";
-import { ref, deleteObject } from "firebase/storage";
+import {
+  ref,
+  deleteObject,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import { getStatusLabel, getStatusBadgeVariant } from "@/lib/status-utils";
 import { VerificationStatus } from "@/types";
 import { cn } from "@/lib/utils";
@@ -46,6 +51,7 @@ import { useCurrentUser } from "@/contexts/UserContext";
 import { ImageUploadCard } from "@/components/ImageUploadCard";
 import { MonoVerificationDialog } from "@/components/MonoVerificationDialog";
 import { CardDescription } from "@/components/ui/card";
+// import { ref,  } from "firebase/storage";
 
 function formatISOToReadable(isoString: string): string {
   const date = new Date(isoString);
@@ -159,6 +165,59 @@ export default function RiderDetailsPage() {
   const [isStateUpdating, setIsStateUpdating] = useState(false);
   const [isLgaUpdating, setIsLgaUpdating] = useState(false);
   const [isAddressUpdating, setIsAddressUpdating] = useState(false);
+
+  const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+
+  const handleProfileImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    if (!rider?.id) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Only PNG or JPG images allowed");
+      return;
+    }
+
+    try {
+      setUploadingProfileImage(true);
+
+      const ext = file.name.split(".").pop() || "jpg";
+      const filename = `profile_${Date.now()}.${ext}`;
+
+      const storageRef = ref(storage, `riders/${rider.id}/profile/${filename}`);
+
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        () => {},
+        (error) => {
+          console.error(error);
+          toast.error("Upload failed");
+          setUploadingProfileImage(false);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+          // save to Firestore
+          await ridersService.updateRider(rider.id!, {
+            imageUrl: downloadURL,
+          });
+
+          toast.success("Profile image updated");
+          await loadRiderData();
+          setUploadingProfileImage(false);
+        },
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error("Upload error");
+      setUploadingProfileImage(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -740,7 +799,8 @@ export default function RiderDetailsPage() {
             </div>
             <div className="flex flex-col items-start gap-2">
               <p className="text-sm text-muted-foreground">Image</p>
-              {rider.imageUrl ? (
+
+              <div className="relative group">
                 <div
                   style={{
                     backgroundImage: `url(${rider.imageUrl})`,
@@ -749,13 +809,39 @@ export default function RiderDetailsPage() {
                     border: "1px solid black",
                     backgroundSize: "cover",
                     backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
                     borderRadius: "100%",
                   }}
-                ></div>
-              ) : (
-                <span className="text-muted-foreground">N/A</span>
-              )}
+                />
+
+                {isSuperAdmin && (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      id="profileImageInput"
+                      className="hidden"
+                      onChange={handleProfileImageChange}
+                    />
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="
+          absolute bottom-2 left-1/2 -translate-x-1/2
+          opacity-0 group-hover:opacity-100
+          transition-opacity duration-200
+          backdrop-blur-sm bg-white/80
+        "
+                      disabled={uploadingProfileImage}
+                      onClick={() =>
+                        document.getElementById("profileImageInput")?.click()
+                      }
+                    >
+                      {uploadingProfileImage ? "Uploading..." : "Edit"}
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
