@@ -24,6 +24,20 @@ import { transactionService } from "@/services/transaction.service";
 import type { User, Rider } from "@/types";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/contexts/UserContext";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TransactModalProps {
   open: boolean;
@@ -32,15 +46,23 @@ interface TransactModalProps {
 
 export function TransactModal({ open, onOpenChange }: TransactModalProps) {
   const { user: currentAdmin, refetchUser } = useCurrentUser();
-  const [transactionMode, setTransactionMode] = useState<"credit" | "debit">("credit");
+  const [transactionMode, setTransactionMode] = useState<"credit" | "debit">(
+    "credit",
+  );
   const [recipientType, setRecipientType] = useState<"user" | "rider">("user");
   const [users, setUsers] = useState<User[]>([]);
   const [riders, setRiders] = useState<Rider[]>([]);
-  const [selectedRecipientId, setSelectedRecipientId] = useState<string>("");
+  // const [selectedRecipientId, setSelectedRecipientId] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [narration, setNarration] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const [riderSearchOpen, setRiderSearchOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedRiderId, setSelectedRiderId] = useState("");
+  const selectedRecipientId =
+    recipientType === "user" ? selectedUserId : selectedRiderId;
 
   useEffect(() => {
     if (open) {
@@ -105,6 +127,9 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
       return;
     }
 
+    const selectedUser = users.find((u) => u.id === selectedRecipientId);
+    const selectedRider = riders.find((r) => r.id === selectedRecipientId);
+
     try {
       setLoading(true);
 
@@ -126,7 +151,9 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
         });
       }
 
-      toast.success(`${transactionMode === "credit" ? "Credit" : "Debit"} transaction completed successfully`);
+      toast.success(
+        `${transactionMode === "credit" ? "Credit" : "Debit"} transaction completed successfully`,
+      );
 
       // Refetch user data to update wallet balance
       await refetchUser();
@@ -135,7 +162,9 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
 
       // Reset form
       setTransactionMode("credit");
-      setSelectedRecipientId("");
+      setSelectedRiderId("");
+      setSelectedUserId("");
+      // setRecipientType("user");
       setAmount("");
       setNarration("");
     } catch (error: any) {
@@ -146,6 +175,8 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
     }
   };
 
+  console.log(selectedRecipientId);
+
   const adminBalance = currentAdmin?.walletbalance || 0;
 
   return (
@@ -153,7 +184,9 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {transactionMode === "credit" ? "Send Money (Credit)" : "Take Money (Debit)"}
+            {transactionMode === "credit"
+              ? "Send Money (Credit)"
+              : "Take Money (Debit)"}
           </DialogTitle>
           <DialogDescription>
             {transactionMode === "credit"
@@ -193,44 +226,147 @@ export function TransactModal({ open, onOpenChange }: TransactModalProps) {
             <TabsContent value="user" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="user-select">Select User</Label>
-                <Select
-                  value={selectedRecipientId}
-                  onValueChange={setSelectedRecipientId}
-                  disabled={loadingData}
-                >
-                  <SelectTrigger className="w-full" id="user-select">
-                    <SelectValue placeholder="Choose a user" />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id!}>
-                        {user.username || user.email || "Unknown User"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+                  <PopoverTrigger asChild disabled={loadingData}>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={userSearchOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {selectedUserId
+                        ? users.find((u) => u.id === selectedUserId)
+                            ?.username ||
+                          users.find((u) => u.id === selectedUserId)?.email ||
+                          "Selected user"
+                        : "Choose a user"}
+
+                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+
+                  <PopoverContent
+                    align="start"
+                    className="w-75 p-0"
+                    onWheel={(e) => e.stopPropagation()}
+                  >
+                    <Command>
+                      {/* 🔥 search happens here */}
+                      <CommandInput
+                        placeholder="Search by username, email or ID..."
+                        className="h-10"
+                      />
+
+                      <CommandEmpty>No user found.</CommandEmpty>
+
+                      <CommandGroup className="max-h-64 overflow-y-auto">
+                        {users.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={`${user.username} ${user.email} ${user.id}`}
+                            onSelect={() => {
+                              setSelectedUserId(user.id!);
+                              setUserSearchOpen(false);
+                            }}
+                            className="flex items-center gap-2 py-2"
+                          >
+                            <Check
+                              className={cn(
+                                "h-4 w-4",
+                                selectedRecipientId === user.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {user.username || "Unnamed user"}
+                              </span>
+
+                              <span className="text-xs text-muted-foreground">
+                                {user.email || user.id}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TabsContent>
 
             <TabsContent value="rider" className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="rider-select">Select Rider</Label>
-                <Select
-                  value={selectedRecipientId}
-                  onValueChange={setSelectedRecipientId}
-                  disabled={loadingData}
+                <Popover
+                  open={riderSearchOpen}
+                  onOpenChange={setRiderSearchOpen}
                 >
-                  <SelectTrigger className="w-full" id="rider-select">
-                    <SelectValue placeholder="Choose a rider" />
-                  </SelectTrigger>
-                  <SelectContent className="w-full">
-                    {riders.map((rider) => (
-                      <SelectItem key={rider.id} value={rider.id!}>
-                        {rider.fullname || "Unknown Rider"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <PopoverTrigger asChild disabled={loadingData}>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={riderSearchOpen}
+                      className="w-full justify-between font-normal"
+                    >
+                      {selectedRiderId
+                        ? riders.find((r) => r.id === selectedRiderId)
+                            ?.fullname || "Selected rider"
+                        : "Choose a rider"}
+
+                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+
+                  <PopoverContent
+                    align="start"
+                    className="w-75 p-0"
+                    onWheel={(e) => e.stopPropagation()}
+                  >
+                    <Command>
+                      <CommandInput
+                        placeholder="Search by name or ID..."
+                        className="h-10"
+                      />
+
+                      <CommandEmpty>No rider found.</CommandEmpty>
+
+                      <CommandGroup className="max-h-64 overflow-y-auto">
+                        {riders.map((rider) => (
+                          <CommandItem
+                            key={rider.id}
+                            value={`${rider.fullname} ${rider.id}`}
+                            onSelect={() => {
+                              setSelectedRiderId(rider.id!);
+                              setRiderSearchOpen(false);
+                            }}
+                            className="flex items-center gap-2 py-2"
+                          >
+                            <Check
+                              className={cn(
+                                "h-4 w-4",
+                                selectedRecipientId === rider.id
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {rider.fullname || "Unknown Rider"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {rider.id}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TabsContent>
           </Tabs>

@@ -107,15 +107,15 @@ export default function RideHailingPage() {
         return "Cancelled";
       case RideHaulingStatus.expired:
         return "Expired";
-      case RideHaulingStatus.courierdeliverdtopnd:
-        return "Delivered to PnD";
+      case RideHaulingStatus.riderArrived:
+        return "Rider Arrived";
       default:
         return "Unknown";
     }
   };
 
   const getStatusVariant = (
-    status?: number
+    status?: number,
   ): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case RideHaulingStatus.completed:
@@ -141,10 +141,10 @@ export default function RideHailingPage() {
     (o) =>
       o.orderStatus === RideHaulingStatus.requested ||
       o.orderStatus === RideHaulingStatus.accepted ||
-      o.orderStatus === RideHaulingStatus.onroute
+      o.orderStatus === RideHaulingStatus.onroute,
   ).length;
   const completedRides = orders.filter(
-    (o) => o.orderStatus === RideHaulingStatus.completed
+    (o) => o.orderStatus === RideHaulingStatus.completed,
   ).length;
   const totalRevenue = orders
     .filter((o) => o.ispaid)
@@ -386,7 +386,7 @@ export default function RideHailingPage() {
                       {order.createdAt
                         ? format(
                             new Date(order.createdAt as Date),
-                            "dd-MM-yyyy"
+                            "dd-MM-yyyy",
                           )
                         : "N/A"}
                     </TableCell>
