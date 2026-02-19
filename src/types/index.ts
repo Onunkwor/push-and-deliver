@@ -438,7 +438,7 @@ export const RideHaulingStatus = {
   completed: 3,
   cancelled: 4,
   expired: 5,
-  courierdeliverdtopnd: 6,
+  riderArrived: 6,
 } as const;
 export type RideHaulingStatus =
   (typeof RideHaulingStatus)[keyof typeof RideHaulingStatus];

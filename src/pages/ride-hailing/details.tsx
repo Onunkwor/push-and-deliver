@@ -376,7 +376,7 @@ export default function RideHailingDetailsPage() {
                     <span className="text-sm font-medium text-red-900 dark:text-red-100">
                       {format(
                         new Date(order.cancelledAt as Date),
-                        "dd-MM-yyyy HH:mm"
+                        "dd-MM-yyyy HH:mm",
                       )}
                     </span>
                   </div>
@@ -418,7 +418,7 @@ export default function RideHailingDetailsPage() {
 
             {canEditPayment && (
               <>
-                <Separator />
+                {/* <Separator />
                 <div className="flex items-center justify-between">
                   <Label htmlFor="payment-status" className="text-sm">
                     Mark as Paid
@@ -429,7 +429,7 @@ export default function RideHailingDetailsPage() {
                     onCheckedChange={handlePaymentStatusToggle}
                     disabled={updatingPayment}
                   />
-                </div>
+                </div> */}
               </>
             )}
           </CardContent>
@@ -467,7 +467,7 @@ export default function RideHailingDetailsPage() {
                 {order.createdAt
                   ? format(
                       new Date(order.createdAt as Date),
-                      "dd-MM-yyyy HH:mm"
+                      "dd-MM-yyyy HH:mm",
                     )
                   : "N/A"}
               </span>
