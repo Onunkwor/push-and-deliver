@@ -152,6 +152,9 @@ export default function RideHailingPage() {
   const completedRevenue = orders
     .filter((o) => o.orderStatus === RideHaulingStatus.completed && o.ispaid)
     .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const canceledRides = orders.filter(
+    (o) => o.orderStatus === RideHaulingStatus.cancelled,
+  ).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -232,24 +235,21 @@ export default function RideHailingPage() {
               >
                 {completedRides}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-primary font-bold mt-1">
                 ₦{formatAmount(completedRevenue)} earned
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-[hsl(280,40%,50%)] bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/20 dark:to-background">
+          <Card className="border-l-4 border-l-[#e7000b] bg-gradient-to-br from-purple-50 to-white dark:from-[#e7000b]/20 dark:to-background">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Revenue
+                Canceled Rides
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div
-                className="text-3xl font-bold"
-                style={{ color: "hsl(280, 40%, 50%)" }}
-              >
-                ₦{formatAmount(totalRevenue)}
+              <div className="text-3xl font-bold" style={{ color: "#e7000b" }}>
+                {canceledRides}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 From all rides

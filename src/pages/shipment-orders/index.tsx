@@ -120,7 +120,7 @@ export default function ShipmentOrdersPage() {
   };
 
   const getStatusVariant = (
-    status?: number
+    status?: number,
   ): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case ShipmentOrderStatus.deliveredToDestination:
@@ -146,10 +146,10 @@ export default function ShipmentOrdersPage() {
       o.orderStatus === ShipmentOrderStatus.acceptedByRider ||
       o.orderStatus === ShipmentOrderStatus.sentToHq ||
       o.orderStatus === ShipmentOrderStatus.onrouteToDestination ||
-      o.orderStatus === ShipmentOrderStatus.onRouteToPndHQ
+      o.orderStatus === ShipmentOrderStatus.onRouteToPndHQ,
   ).length;
   const deliveredShipments = orders.filter(
-    (o) => o.orderStatus === ShipmentOrderStatus.deliveredToDestination
+    (o) => o.orderStatus === ShipmentOrderStatus.deliveredToDestination,
   ).length;
   const totalRevenue = orders
     .filter((o) => o.ispaid)
@@ -157,9 +157,14 @@ export default function ShipmentOrdersPage() {
   const deliveredRevenue = orders
     .filter(
       (o) =>
-        o.orderStatus === ShipmentOrderStatus.deliveredToDestination && o.ispaid
+        o.orderStatus === ShipmentOrderStatus.deliveredToDestination &&
+        o.ispaid,
     )
     .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+  const cancelledShipments = orders.filter(
+    (o) => o.orderStatus === ShipmentOrderStatus.cancelled,
+  ).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -238,24 +243,21 @@ export default function ShipmentOrdersPage() {
               >
                 {deliveredShipments}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-primary font-bold mt-1">
                 ₦{formatAmount(deliveredRevenue)} earned
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-[hsl(280,40%,50%)] bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/20 dark:to-background">
+          <Card className="border-l-4 border-l-[#e7000b] bg-gradient-to-br from-purple-50 to-white dark:from-[#e7000b]/20 dark:to-background">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Revenue
+                Cancelled Shipments
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div
-                className="text-3xl font-bold"
-                style={{ color: "hsl(280, 40%, 50%)" }}
-              >
-                ₦{formatAmount(totalRevenue)}
+              <div className="text-3xl font-bold" style={{ color: "#e7000b" }}>
+                {cancelledShipments}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 From all shipments
@@ -428,7 +430,7 @@ export default function ShipmentOrdersPage() {
                       {order.createdAt
                         ? format(
                             new Date(order.createdAt as Date),
-                            "dd-MM-yyyy"
+                            "dd-MM-yyyy",
                           )
                         : "N/A"}
                     </TableCell>
